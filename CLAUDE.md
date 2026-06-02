@@ -292,5 +292,21 @@ formal controls, field-level encryption at rest, live session revocation, and th
 larger UX backlog (global ⌘K search wiring, saved filters, bulk actions,
 automation template library).
 
-**Current status:** Phases 0–11 complete (88 Pest tests green). Phase 12
-(Industry Modules) is next and not yet started.
+## Industry Modules (Phase 12)
+
+`App\Modules\Industry`: installable, per-tenant verticals. `ModuleRegistry` holds
+manifests for **Real Estate** (property), **Recruitment** (candidate), **Education**
+(student) and **Healthcare** (patient, HIPAA-flagged) — each a "custom object"
+defined by a field schema (text/textarea/number/money/select/date). `Modules`
+service reads/writes `module_settings` (per-tenant on/off) and derives sidebar
+nav (shared as `industryNav` in HandleInertiaRequests). `ModuleController` is the
+marketplace (enable/disable); `ModuleRecordController` is ONE generic CRUD engine
+that builds validation, columns and the create form from the manifest — money is
+stored as integer minor units, records are tenant-scoped (`module_records`) and
+optionally linked to a core `Contact`. A disabled module 404s (invisible).
+RBAC: `modules.manage` (install, Owner/Admin) + `modules.view`/`modules.use`
+(records, all roles). Settings → Modules; enabled modules add an "Industry" nav
+group. Seeder enables Real Estate + Recruitment for Acme with linked demo records.
+
+**Current status:** Phases 0–12 complete (95 Pest tests green) — the full roadmap
+is built. Future verticals/entities are added by extending `ModuleRegistry`.

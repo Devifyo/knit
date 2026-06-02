@@ -55,6 +55,11 @@ const icons = {
     developer: icon('M8 9l-3 3 3 3M16 9l3 3-3 3M13 5l-2 14'),
     security: icon('M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4zM9 12l2 2 4-4'),
     audit: icon('M9 12h6M9 16h6M9 8h2M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6'),
+    modules: icon('M12 2l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5'),
+    home: icon('M3 11l9-8 9 8M5 9v11a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9'),
+    people: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
+    edu: icon('M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1 2.7 2 6 2s6-1 6-2v-5'),
+    health: icon('M12 21s-8-4.5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 6.5-8 11-8 11zM12 8v4M10 10h4'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -96,11 +101,21 @@ const groups = [
         { label: 'Security', href: '/settings/security', icon: 'security' },
         { label: 'Audit log', href: '/settings/audit', icon: 'audit' },
         { label: 'Developer', href: '/settings/webhooks', icon: 'developer' },
+        { label: 'Modules', href: '/settings/modules', icon: 'modules' },
         { label: 'Settings', href: '/settings/branding', icon: 'settings' },
     ] },
 ];
 
-const commands = groups.flatMap((g) => g.items).map((n, i) => ({ id: i, label: n.label, href: n.href, group: 'Go to' }));
+// Inject a dynamic "Industry" group for the tenant's enabled modules.
+const navGroups = computed(() => {
+    const entries = page.props.industryNav ?? [];
+    if (!entries.length) return groups;
+    const industry = { label: 'Industry', items: entries.map((e) => ({ label: e.label, href: e.href, icon: e.icon })) };
+    // Place it just before the Workspace group (the last group).
+    return [...groups.slice(0, -1), industry, groups[groups.length - 1]];
+});
+
+const commands = computed(() => navGroups.value.flatMap((g) => g.items).map((n, i) => ({ id: i, label: n.label, href: n.href, group: 'Go to' })));
 const logout = () => router.post('/logout');
 
 // Dark mode — persisted to localStorage, applied to <html> (init script in app.blade).
@@ -126,7 +141,7 @@ const isActive = (href) => page.url === href || (href !== '/dashboard' && page.u
                 <span class="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">{{ branding.name || 'Knit' }}</span>
             </div>
             <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-2">
-                <div v-for="(group, gi) in groups" :key="gi" class="space-y-0.5">
+                <div v-for="(group, gi) in navGroups" :key="gi" class="space-y-0.5">
                     <p v-if="group.label" class="px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wider text-faint">{{ group.label }}</p>
                     <Link
                         v-for="item in group.items"

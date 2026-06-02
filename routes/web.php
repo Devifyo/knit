@@ -25,6 +25,8 @@ use App\Modules\Contacts\Http\Controllers\CompanyController;
 use App\Modules\Contacts\Http\Controllers\ContactController;
 use App\Modules\Deals\Http\Controllers\DealController;
 use App\Modules\Deals\Http\Controllers\QuoteController;
+use App\Modules\Industry\Http\Controllers\ModuleController;
+use App\Modules\Industry\Http\Controllers\ModuleRecordController;
 use App\Modules\Integrations\Http\Controllers\WebhookEndpointController;
 use App\Modules\Leads\Http\Controllers\LeadCaptureController;
 use App\Modules\Leads\Http\Controllers\LeadController;
@@ -228,6 +230,17 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
     Route::middleware('permission:compliance.manage')->group(function () {
         Route::get('/contacts/{contact}/export', [ComplianceController::class, 'export'])->name('contacts.export');
         Route::post('/contacts/{contact}/erase', [ComplianceController::class, 'erase'])->name('contacts.erase');
+    });
+
+    // Industry modules — marketplace (install/uninstall) + generic record CRUD
+    Route::get('/settings/modules', [ModuleController::class, 'index'])->middleware('permission:modules.view')->name('modules.index');
+    Route::post('/settings/modules/{key}/toggle', [ModuleController::class, 'toggle'])->middleware('permission:modules.manage')->name('modules.toggle');
+    Route::middleware('permission:modules.view')->group(function () {
+        Route::get('/m/{module}/{entity}', [ModuleRecordController::class, 'index'])->name('modules.records.index');
+    });
+    Route::middleware('permission:modules.use')->group(function () {
+        Route::post('/m/{module}/{entity}', [ModuleRecordController::class, 'store'])->name('modules.records.store');
+        Route::delete('/m/{module}/{entity}/{record}', [ModuleRecordController::class, 'destroy'])->name('modules.records.destroy');
     });
 
     // Integrations — outbound webhooks (developer platform)

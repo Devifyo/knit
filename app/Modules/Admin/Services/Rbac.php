@@ -64,6 +64,8 @@ final class Rbac
             'integrations.view', 'integrations.manage',
             // Security & compliance (account-level — Owner/Admin only)
             'security.manage', 'audit.view', 'compliance.manage',
+            // Industry modules — install (Owner/Admin) + use records (everyone)
+            'modules.manage', 'modules.view', 'modules.use',
         ];
     }
 
@@ -97,6 +99,7 @@ final class Rbac
                 'marketing.view', 'marketing.manage',
                 'analytics.view', 'reports.export',
                 'projects.view', 'projects.manage',
+                'modules.view', 'modules.use',
             ],
             self::AGENT => [
                 'notes.view', 'notes.create',
@@ -111,6 +114,7 @@ final class Rbac
                 'tickets.view', 'tickets.manage',
                 'analytics.view', 'reports.export',
                 'projects.view', 'projects.manage',
+                'modules.view', 'modules.use',
             ],
         ];
     }

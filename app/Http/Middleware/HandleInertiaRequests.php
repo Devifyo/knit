@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Subscription;
+use App\Modules\Industry\Services\Modules;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -74,6 +75,15 @@ class HandleInertiaRequests extends Middleware
                     'on_trial' => (bool) $sub?->onTrial(),
                     'trial_ends_at' => $sub?->trial_ends_at?->toFormattedDateString(),
                 ];
+            },
+
+            // Sidebar entries for the tenant's enabled industry modules.
+            'industryNav' => function () use ($request) {
+                if (! $request->user() || ! function_exists('tenant') || tenant() === null) {
+                    return [];
+                }
+
+                return app(Modules::class)->navEntries();
             },
         ];
     }

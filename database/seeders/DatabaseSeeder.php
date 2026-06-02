@@ -14,6 +14,7 @@ use App\Models\Form;
 use App\Models\Invitation;
 use App\Models\KbArticle;
 use App\Models\Lead;
+use App\Models\ModuleRecord;
 use App\Models\Note;
 use App\Models\Pipeline;
 use App\Models\Plan;
@@ -28,6 +29,7 @@ use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use App\Modules\Billing\Services\BillingService;
 use App\Modules\Communication\Services\InboundEmailService;
+use App\Modules\Industry\Services\Modules;
 use App\Modules\Support\Channels\EmailChannelAdapter;
 use App\Modules\Support\Services\TicketIntakeService;
 use Illuminate\Database\Seeder;
@@ -229,6 +231,41 @@ class DatabaseSeeder extends Seeder
                     $task->timeEntries()->create([
                         'user_id' => $assignee, 'minutes' => 45 + $pos * 30,
                         'note' => 'Initial pass', 'logged_at' => now()->subDays($pos),
+                    ]);
+                }
+            }
+
+            // Phase 12 — enable industry modules for Acme only (per-tenant), with
+            // a few demo records linked to existing contacts. Globex stays bare so
+            // the per-tenant difference + isolation are visible.
+            if ($tenant->name === 'Acme Inc.') {
+                $modules = app(Modules::class);
+                $modules->setEnabled('real_estate', true);
+                $modules->setEnabled('recruitment', true);
+
+                $someContacts = Contact::take(3)->get();
+                foreach ([
+                    ['12 Maple Avenue, Portland', 525000, 3, 'House', 'For sale'],
+                    ['480 Harbor St, Unit 9', 310000, 2, 'Apartment', 'Under offer'],
+                    ['77 Cedar Lane', 689000, 4, 'House', 'Sold'],
+                ] as $i => [$address, $price, $beds, $type, $status]) {
+                    ModuleRecord::create([
+                        'module_key' => 'real_estate', 'entity_key' => 'property',
+                        'title' => $address, 'status' => $status, 'owner_id' => $owner->id,
+                        'contact_id' => $someContacts[$i]->id ?? null,
+                        'data' => ['address' => $address, 'price' => $price * 100, 'bedrooms' => $beds, 'type' => $type, 'status' => $status],
+                    ]);
+                }
+
+                foreach ([
+                    ['Jordan Lee', 'Senior Engineer', 'Interview'],
+                    ['Sam Rivera', 'Product Designer', 'Screening'],
+                ] as $i => [$name, $role, $stage]) {
+                    ModuleRecord::create([
+                        'module_key' => 'recruitment', 'entity_key' => 'candidate',
+                        'title' => $name, 'status' => $stage, 'owner_id' => $owner->id,
+                        'contact_id' => $someContacts[$i]->id ?? null,
+                        'data' => ['name' => $name, 'role' => $role, 'stage' => $stage, 'source' => 'LinkedIn'],
                     ]);
                 }
             }
