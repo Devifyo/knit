@@ -230,5 +230,14 @@ Activity + linked Tasks), `TicketController@assist`, `DealController@insight`.
 AI-assist results flash via `session('ai')` (shared in HandleInertiaRequests).
 Toggle AI per workspace in Settings → branding.
 
-**Current status:** Phases 0–7 complete (56 Pest tests green; AI verified live).
-Phase 8 (Analytics & Reporting) is next and not yet started.
+## Analytics (Phase 8)
+
+`App\Modules\Analytics`: `DashboardController` returns KPI widgets + pipeline-by-stage
++ a manager-only leaderboard; `DashboardStatsUpdated` broadcasts on
+`tenant.{id}.dashboard` (fired from `DealController@move`) and `Dashboard.vue`
+`useEcho`-reloads its props live. `ReportService` builds filtered (owner/date/status)
+deals/leads reports; `ReportController@export` streams CSV, Excel (`ArrayReportExport`
+via maatwebsite), or PDF (`pdf.report` via dompdf).
+
+**Current status:** Phases 0–8 complete (59 Pest tests green). Phase 9
+(Collaboration & Projects) is next and not yet started.

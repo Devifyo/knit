@@ -139,9 +139,21 @@ a lead scored **92/100** with contextual reasons; a meeting transcript produced 
 timeline summary + **3 extracted tasks**; `ai_outputs` logged each call. Pint +
 PHPStan L6 green.
 
-## 🔜 Phase 8 — Analytics & Reporting (next)
-Real-time role-based dashboards (Reverb), KPI widgets, custom report builder;
-sales/marketing/support analytics; export CSV/Excel/PDF.
+## ✅ Phase 8 — Analytics & Reporting
+**Live dashboard** (`App\Modules\Analytics`): KPI widgets (open deals, pipeline
+value, **won-this-month + win-rate**, open tickets), pipeline-by-stage, and a
+manager-only **top-reps leaderboard**. A `DashboardStatsUpdated` event broadcasts on
+`tenant.{id}.dashboard` whenever a deal moves, and the dashboard subscribes via
+`useEcho` to refresh widgets live. **Custom report builder** (`ReportService`):
+deals/leads filtered by **owner + date range + status**, with summaries and
+**CSV / Excel (maatwebsite) / PDF (dompdf) export**.
+
+**Acceptance — met (3 new Pest tests, 59 total) + verified live:** closing a deal
+moved the dashboard's won count 2→3 and broadcast the update; a report filtered by
+owner/date exported correctly as CSV (`text/csv`), Excel (xlsx) and PDF. Pint +
+PHPStan L6 green.
+
+## 🔜 Phase 9 — Collaboration & Projects (next)
 
 ## ⬜ Phase 9 — Collaboration & Projects
 Notes, @mentions, shared tasks/calendars, activity feeds; project management with

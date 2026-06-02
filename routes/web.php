@@ -9,6 +9,7 @@ use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\AI\Http\Controllers\MeetingController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
+use App\Modules\Analytics\Http\Controllers\ReportController;
 use App\Modules\Automation\Http\Controllers\TaskController;
 use App\Modules\Automation\Http\Controllers\WorkflowController;
 use App\Modules\Communication\Http\Controllers\ChatController;
@@ -33,7 +34,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'phase' => 'Phase 7 — AI Layer (Gemini)',
+        'phase' => 'Phase 8 — Analytics & Reporting',
         'laravelVersion' => app()->version(),
         'phpVersion' => PHP_VERSION,
     ]);
@@ -63,6 +64,10 @@ Route::get('/track/click/{token}', [TrackingController::class, 'click'])->name('
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Analytics — custom report builder + exports
+    Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:analytics.view')->name('reports.index');
+    Route::get('/reports/export/{format}', [ReportController::class, 'export'])->middleware('permission:reports.export')->name('reports.export');
 
     // Contacts
     Route::middleware('permission:contacts.view')->group(function () {

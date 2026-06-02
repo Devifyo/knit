@@ -12,6 +12,7 @@ use App\Models\Pipeline;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Stage;
+use App\Modules\Analytics\Events\DashboardStatsUpdated;
 use App\Modules\Deals\Services\PricingService;
 use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
@@ -164,6 +165,7 @@ class DealController extends Controller
 
         if ($from !== $stage->id) {
             event(new DealStageChanged($deal, $from, $stage->id));
+            event(new DashboardStatsUpdated((string) $deal->tenant_id, 'deal.moved'));
         }
 
         return back()->with('success', 'Deal moved.');
