@@ -1,11 +1,16 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import SettingsLayout from '@/Layouts/SettingsLayout.vue';
 import { Button, Card, Input, Tag } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
 defineOptions({ layout: SettingsLayout });
-const props = defineProps({ events: Array, endpoints: Array, deliveries: Array });
+const props = defineProps({ eventGroups: Array, endpoints: Array, deliveries: Array });
+
+const allEvents = () => props.eventGroups.flatMap((g) => g.events);
+const allSelected = computed(() => allEvents().length > 0 && allEvents().every((e) => form.events.includes(e)));
+const toggleAll = () => { form.events = allSelected.value ? [] : allEvents(); };
 
 const { can } = usePermissions();
 const manage = can('integrations.manage');
@@ -29,12 +34,20 @@ const ping = (id) => router.post(`/settings/webhooks/${id}/ping`, {}, { preserve
             <form class="space-y-4" @submit.prevent="add">
                 <Input v-model="form.url" label="Payload URL" placeholder="https://example.com/hooks/knit" :error="form.errors.url" required />
                 <div>
-                    <p class="mb-1.5 text-xs font-medium text-muted">Events</p>
-                    <div class="flex flex-wrap gap-2">
-                        <label v-for="e in events" :key="e" class="flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border border-hairline px-3 py-1.5 text-sm text-ink-soft hover:bg-sunken">
-                            <input v-model="form.events" type="checkbox" :value="e" class="accent-[var(--brand)]" />
-                            <span class="font-mono text-xs">{{ e }}</span>
-                        </label>
+                    <div class="mb-2 flex items-center justify-between">
+                        <p class="text-xs font-medium text-muted">Events <span class="text-faint">({{ form.events.length }} selected)</span></p>
+                        <button type="button" class="text-xs font-medium text-[var(--brand)] hover:underline" @click="toggleAll">{{ allSelected ? 'Clear all' : 'Select all' }}</button>
+                    </div>
+                    <div class="space-y-3 rounded-[var(--radius-card)] border border-hairline p-3">
+                        <div v-for="grp in eventGroups" :key="grp.group">
+                            <p class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-faint">{{ grp.group }}</p>
+                            <div class="flex flex-wrap gap-2">
+                                <label v-for="e in grp.events" :key="e" :class="['flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border px-2.5 py-1.5 text-sm transition-colors', form.events.includes(e) ? 'border-[var(--brand)] brand-wash text-[var(--brand)]' : 'border-hairline text-ink-soft hover:bg-sunken']">
+                                    <input v-model="form.events" type="checkbox" :value="e" class="accent-[var(--brand)]" />
+                                    <span class="font-mono text-xs">{{ e }}</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     <p v-if="form.errors.events" class="mt-1 text-xs text-critical">{{ form.errors.events }}</p>
                 </div>

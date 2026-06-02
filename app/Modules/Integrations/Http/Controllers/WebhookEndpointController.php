@@ -16,13 +16,30 @@ use Inertia\Response;
 
 class WebhookEndpointController extends Controller
 {
-    /** Events a tenant can subscribe an endpoint to. */
-    public const EVENTS = ['contact.created', 'lead.created', 'deal.created'];
+    /** Events a tenant can subscribe an endpoint to, grouped for the UI. */
+    public const EVENT_GROUPS = [
+        'Contacts' => ['contact.created', 'contact.updated', 'contact.deleted'],
+        'Companies' => ['company.created', 'company.updated'],
+        'Leads' => ['lead.created', 'lead.updated', 'lead.converted'],
+        'Deals' => ['deal.created', 'deal.updated', 'deal.won', 'deal.lost'],
+        'Sales' => ['quote.accepted', 'invoice.paid'],
+        'Support' => ['ticket.created'],
+        'Productivity' => ['task.completed', 'project.created'],
+    ];
+
+    /** @return array<int, string> */
+    public static function events(): array
+    {
+        return array_merge(...array_values(self::EVENT_GROUPS));
+    }
 
     public function index(): Response
     {
         return Inertia::render('Settings/Webhooks', [
-            'events' => self::EVENTS,
+            'eventGroups' => collect(self::EVENT_GROUPS)->map(fn (array $events, string $group) => [
+                'group' => $group,
+                'events' => $events,
+            ])->values(),
             'endpoints' => WebhookEndpoint::withCount('deliveries')->latest()->get()->map(fn (WebhookEndpoint $e): array => [
                 'id' => $e->id,
                 'url' => $e->url,
@@ -47,7 +64,7 @@ class WebhookEndpointController extends Controller
         $data = $request->validate([
             'url' => ['required', 'url', 'max:2048'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', 'in:'.implode(',', self::EVENTS)],
+            'events.*' => ['string', 'in:'.implode(',', self::events())],
         ]);
 
         $secret = 'whsec_'.Str::random(40);

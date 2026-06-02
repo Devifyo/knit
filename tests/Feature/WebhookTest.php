@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Contact;
+use App\Models\Deal;
+use App\Models\Pipeline;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\WebhookDelivery;
@@ -70,6 +72,26 @@ it('does not fire for events the endpoint is not subscribed to', function () {
 
     expect(WebhookDelivery::count())->toBe(0);
     Http::assertNothingSent();
+});
+
+it('fires lifecycle + domain events (contact.updated, deal.won)', function () {
+    Http::fake(['*' => Http::response('', 200)]);
+    [, $owner] = webhookWorkspace();
+    makeEndpoint('whsec_x', ['contact.updated', 'deal.won']);
+
+    // Updating a contact → contact.updated
+    $contact = Contact::factory()->create(['owner_id' => $owner->id]);
+    $contact->update(['first_name' => 'Renamed']);
+    expect(WebhookDelivery::where('event', 'contact.updated')->exists())->toBeTrue();
+
+    // A deal whose status flips to "won" → deal.won
+    $pipeline = Pipeline::where('is_default', true)->first();
+    $deal = Deal::factory()->create([
+        'pipeline_id' => $pipeline->id, 'stage_id' => $pipeline->stages()->first()->id,
+        'owner_id' => $owner->id, 'status' => 'open',
+    ]);
+    $deal->update(['status' => 'won']);
+    expect(WebhookDelivery::where('event', 'deal.won')->exists())->toBeTrue();
 });
 
 it('registers an endpoint through the settings screen', function () {

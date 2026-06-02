@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
+use App\Models\Invoice;
 use App\Models\Lead;
 use App\Models\LoginActivity;
+use App\Models\Project;
+use App\Models\Quote;
+use App\Models\Task;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Automation\Services\WorkflowEngine;
@@ -67,13 +73,61 @@ class AppServiceProvider extends ServiceProvider
         Contact::created(fn ($m) => $engine()->trigger('contact.created', $m));
         Deal::created(fn ($m) => $engine()->trigger('deal.created', $m));
 
-        // Integration triggers — fan the same record events out to tenant
-        // webhook endpoints (Zapier-compatible). Tenant-guarded + no-op when no
-        // endpoint subscribes, so it's free when unused.
+        // Integration triggers — fan record lifecycle + key domain events out to
+        // tenant webhook endpoints (Zapier-compatible). Tenant-guarded + no-op
+        // when no endpoint subscribes, so it's free when unused.
         $hooks = fn () => app(WebhookDispatcher::class);
-        Lead::created(fn (Lead $m) => $hooks()->dispatch('lead.created', $m->only(['id', 'name', 'email', 'status'])));
+
+        // Contacts
         Contact::created(fn (Contact $m) => $hooks()->dispatch('contact.created', $m->only(['id', 'first_name', 'last_name', 'email'])));
+        Contact::updated(fn (Contact $m) => $hooks()->dispatch('contact.updated', $m->only(['id', 'first_name', 'last_name', 'email'])));
+        Contact::deleted(fn (Contact $m) => $hooks()->dispatch('contact.deleted', $m->only(['id'])));
+
+        // Companies
+        Company::created(fn (Company $m) => $hooks()->dispatch('company.created', $m->only(['id', 'name'])));
+        Company::updated(fn (Company $m) => $hooks()->dispatch('company.updated', $m->only(['id', 'name'])));
+
+        // Leads (+ conversion)
+        Lead::created(fn (Lead $m) => $hooks()->dispatch('lead.created', $m->only(['id', 'name', 'email', 'status'])));
+        Lead::updated(function (Lead $m) use ($hooks): void {
+            $hooks()->dispatch('lead.updated', $m->only(['id', 'name', 'email', 'status']));
+            if ($m->wasChanged('converted_at') && $m->converted_at !== null) {
+                $hooks()->dispatch('lead.converted', $m->only(['id', 'name', 'converted_to_contact_id']));
+            }
+        });
+
+        // Deals (+ won/lost)
         Deal::created(fn (Deal $m) => $hooks()->dispatch('deal.created', $m->only(['id', 'name', 'amount', 'status'])));
+        Deal::updated(function (Deal $m) use ($hooks): void {
+            $hooks()->dispatch('deal.updated', $m->only(['id', 'name', 'amount', 'status']));
+            if ($m->wasChanged('status') && $m->status === 'won') {
+                $hooks()->dispatch('deal.won', $m->only(['id', 'name', 'amount']));
+            }
+            if ($m->wasChanged('status') && $m->status === 'lost') {
+                $hooks()->dispatch('deal.lost', $m->only(['id', 'name', 'amount']));
+            }
+        });
+
+        // CPQ + billing
+        Quote::updated(function (Quote $m) use ($hooks): void {
+            if ($m->wasChanged('status') && $m->status === 'accepted') {
+                $hooks()->dispatch('quote.accepted', $m->only(['id', 'number']));
+            }
+        });
+        Invoice::updated(function (Invoice $m) use ($hooks): void {
+            if ($m->wasChanged('status') && $m->status === 'paid') {
+                $hooks()->dispatch('invoice.paid', $m->only(['id', 'number', 'total_minor']));
+            }
+        });
+
+        // Support, productivity
+        Ticket::created(fn (Ticket $m) => $hooks()->dispatch('ticket.created', $m->only(['id', 'subject', 'status'])));
+        Task::updated(function (Task $m) use ($hooks): void {
+            if ($m->wasChanged('completed_at') && $m->completed_at !== null) {
+                $hooks()->dispatch('task.completed', $m->only(['id', 'title']));
+            }
+        });
+        Project::created(fn (Project $m) => $hooks()->dispatch('project.created', $m->only(['id', 'name'])));
 
         // Device/session tracking — record each successful login.
         Event::listen(Login::class, function (Login $event): void {

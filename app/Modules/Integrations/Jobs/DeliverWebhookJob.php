@@ -33,6 +33,10 @@ class DeliverWebhookJob implements ShouldQueue
         if (! $tenant) {
             return;
         }
+        // Restore the caller's tenant afterwards instead of blindly ending — on
+        // the sync queue this job runs inline and must not clobber the request's
+        // tenant context.
+        $previous = tenant();
         tenancy()->initialize($tenant);
 
         try {
@@ -72,7 +76,11 @@ class DeliverWebhookJob implements ShouldQueue
                 throw $e; // let the queue retry per $tries
             }
         } finally {
-            tenancy()->end();
+            if ($previous !== null) {
+                tenancy()->initialize($previous);
+            } else {
+                tenancy()->end();
+            }
         }
     }
 }
