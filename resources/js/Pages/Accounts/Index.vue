@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button, DataTable, Tag, Modal, Input } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
@@ -28,7 +28,7 @@ const submit = () => form.post('/accounts', { preserveScroll: true, onSuccess: (
                 <h1 class="text-xl font-semibold tracking-[-0.02em] text-ink">Accounts</h1>
                 <p class="mt-1 text-sm text-muted">Enterprise relationships, health and renewals</p>
             </div>
-            <Button v-if="can('accounts.manage')" :disabled="!companies.length" @click="open = true">New account</Button>
+            <Button v-if="can('accounts.manage')" @click="open = true">New account</Button>
         </div>
 
         <DataTable :columns="columns" :rows="accounts" empty-title="No accounts yet" empty-description="Wrap a key company as an account to track its health and renewal.">
@@ -50,7 +50,7 @@ const submit = () => form.post('/accounts', { preserveScroll: true, onSuccess: (
                         <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
                     <p v-if="form.errors.company_id" class="mt-1 text-xs text-critical">{{ form.errors.company_id }}</p>
-                    <p v-if="!companies.length" class="mt-1 text-xs text-muted">Every company already has an account. Add a company first.</p>
+                    <p v-if="!companies.length" class="mt-1 text-xs text-muted">No companies are available to wrap yet — <Link href="/companies" class="text-[var(--brand)]">add a company first</Link>. (Companies that already have an account aren't listed.)</p>
                 </div>
                 <Input v-model="form.health_score" type="number" label="Health score (0–100)" placeholder="80" :error="form.errors.health_score" />
                 <Input v-model="form.renewal_date" type="date" label="Renewal date" :error="form.errors.renewal_date" />
