@@ -42,13 +42,7 @@ use App\Modules\Support\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'phase' => 'Phase 8 — Analytics & Reporting',
-        'laravelVersion' => app()->version(),
-        'phpVersion' => PHP_VERSION,
-    ]);
-})->name('home');
+Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
 
 // Public, per-workspace lead capture form (no auth). Feeds the automation engine.
 Route::get('/f/{slug}', [LeadCaptureController::class, 'show'])->name('lead-capture.show');
