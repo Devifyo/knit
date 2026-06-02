@@ -10,6 +10,7 @@ use Database\Factories\DealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -82,5 +83,31 @@ class Deal extends Model implements AuditableContract, TenantOwned
     public function quotes(): HasMany
     {
         return $this->hasMany(Quote::class)->latest();
+    }
+
+    /** @return BelongsToMany<Product, $this, DealProduct, 'pivot'> */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class)
+            ->using(DealProduct::class)
+            ->withPivot(['id', 'quantity', 'unit_price', 'discount_pct'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Recalculate this deal's amount (minor units) from its product line items,
+     * applying per-line discounts. Called whenever products change.
+     */
+    public function recalculateAmountFromProducts(): void
+    {
+        $total = $this->products->sum(function (Product $p) {
+            /** @var DealProduct $pivot */
+            $pivot = $p->pivot;
+            $gross = $pivot->unit_price * $pivot->quantity;
+
+            return (int) round($gross * (1 - $pivot->discount_pct / 100));
+        });
+
+        $this->forceFill(['amount' => $total])->save();
     }
 }

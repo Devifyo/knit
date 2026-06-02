@@ -7,6 +7,7 @@ namespace App\Modules\Automation\Jobs;
 use App\Models\Tag;
 use App\Models\Task;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Models\WorkflowRun;
 use App\Models\WorkflowStep;
 use App\Modules\Automation\Services\ConditionEvaluator;
@@ -116,7 +117,15 @@ class RunWorkflowJob implements ShouldQueue
      */
     protected function sendEmail(array $config, mixed $subject): array
     {
-        $to = data_get($subject, $config['to_field'] ?? 'email');
+        // recipient: 'owner' emails the record's owner/assignee; otherwise the
+        // configured field on the subject (default 'email').
+        if (($config['recipient'] ?? null) === 'owner') {
+            $ownerId = data_get($subject, 'owner_id') ?? data_get($subject, 'assigned_user_id');
+            $to = $ownerId ? User::find($ownerId)?->email : null;
+        } else {
+            $to = data_get($subject, $config['to_field'] ?? 'email');
+        }
+
         if (! $to) {
             return ['skipped' => 'no recipient'];
         }

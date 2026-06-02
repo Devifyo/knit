@@ -7,6 +7,7 @@ defineProps({ workflows: Array });
 const { can } = usePermissions();
 
 const toggle = (id) => router.patch(`/workflows/${id}/toggle`, {}, { preserveScroll: true });
+const testRun = (id) => router.post(`/workflows/${id}/test`);
 
 const stepLabel = { wait: 'Wait', send_email: 'Email', create_task: 'Task', condition: 'If/else', update_field: 'Update', add_tag: 'Tag', assign_owner: 'Assign', webhook: 'Webhook' };
 </script>
@@ -45,7 +46,11 @@ const stepLabel = { wait: 'Wait', send_email: 'Email', create_task: 'Task', cond
                     </template>
                     <span v-if="!w.steps.length" class="text-xs text-faint">No steps yet — click to build</span>
                 </Link>
-                <p class="mt-3 text-xs text-faint">{{ w.runs_count }} {{ w.runs_count === 1 ? 'run' : 'runs' }}</p>
+                <div class="mt-3 flex items-center gap-3 border-t border-hairline-soft pt-3">
+                    <Link :href="`/workflows/${w.id}/runs`" class="text-xs font-medium text-[var(--brand)] hover:underline">{{ w.runs_count }} {{ w.runs_count === 1 ? 'run' : 'runs' }} →</Link>
+                    <button v-if="can('workflows.manage')" class="ml-auto rounded-md px-2 py-1 text-xs text-ink-soft ring-1 ring-hairline hover:bg-sunken" @click="testRun(w.id)">Test run</button>
+                    <Link v-if="can('workflows.manage')" :href="`/workflows/${w.id}/edit`" class="rounded-md px-2 py-1 text-xs text-ink-soft ring-1 ring-hairline hover:bg-sunken">Edit</Link>
+                </div>
             </Card>
         </div>
         <Card v-else flush>

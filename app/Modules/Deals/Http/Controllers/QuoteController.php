@@ -104,6 +104,15 @@ class QuoteController extends Controller
         $data = $request->validate(['status' => ['required', 'in:draft,sent,accepted,declined']]);
         $quote->update(['status' => $data['status']]);
 
+        // An accepted quote sets the linked deal's amount + currency to the quote total.
+        if ($data['status'] === 'accepted' && $quote->deal_id) {
+            $totals = $this->pricing->totals($quote->fresh('items'));
+            $quote->deal?->forceFill([
+                'amount' => $totals['total'],
+                'currency' => $quote->currency,
+            ])->save();
+        }
+
         return back()->with('success', "Quote marked {$data['status']}.");
     }
 

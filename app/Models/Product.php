@@ -10,6 +10,9 @@ use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read DealProduct|null $pivot Present when loaded via Deal::products().
+ */
 class Product extends Model implements TenantOwned
 {
     /** @use HasFactory<ProductFactory> */

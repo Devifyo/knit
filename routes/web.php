@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\NoteController;
 use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
+use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
 use App\Modules\Automation\Http\Controllers\TaskController;
@@ -29,6 +30,10 @@ Route::get('/', function () {
 // Public, per-workspace lead capture form (no auth). Feeds the automation engine.
 Route::get('/f/{slug}', [LeadCaptureController::class, 'show'])->name('lead-capture.show');
 Route::post('/f/{slug}', [LeadCaptureController::class, 'submit'])->name('lead-capture.submit');
+
+// Public invitation acceptance (no auth — the invitee may have no account yet).
+Route::get('/invite/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invite/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -57,6 +62,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/deals/{deal}', [DealController::class, 'show'])->middleware('permission:deals.view')->name('deals.show');
     Route::post('/deals', [DealController::class, 'store'])->middleware('permission:deals.manage')->name('deals.store');
     Route::patch('/deals/{deal}/move', [DealController::class, 'move'])->middleware('permission:deals.manage')->name('deals.move');
+    Route::post('/deals/{deal}/products', [DealController::class, 'addProduct'])->middleware('permission:deals.manage')->name('deals.products.add');
+    Route::delete('/deals/{deal}/products/{pivotId}', [DealController::class, 'removeProduct'])->middleware('permission:deals.manage')->name('deals.products.remove');
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->middleware('permission:accounts.view')->name('accounts.index');
@@ -67,6 +74,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/workflows/create', [WorkflowController::class, 'create'])->name('workflows.create');
         Route::post('/workflows', [WorkflowController::class, 'store'])->name('workflows.store');
         Route::get('/workflows/{workflow}/edit', [WorkflowController::class, 'edit'])->name('workflows.edit');
+        Route::get('/workflows/{workflow}/runs', [WorkflowController::class, 'runs'])->name('workflows.runs');
+        Route::post('/workflows/{workflow}/test', [WorkflowController::class, 'testRun'])->name('workflows.test');
         Route::put('/workflows/{workflow}', [WorkflowController::class, 'update'])->name('workflows.update');
         Route::patch('/workflows/{workflow}/toggle', [WorkflowController::class, 'toggle'])->name('workflows.toggle');
         Route::delete('/workflows/{workflow}', [WorkflowController::class, 'destroy'])->name('workflows.destroy');
@@ -92,6 +101,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Workspace admin
     Route::get('/members', [MemberController::class, 'index'])->middleware('permission:members.view')->name('members.index');
+    Route::post('/members/invite', [MemberController::class, 'invite'])->middleware('permission:members.invite')->name('members.invite');
+    Route::delete('/invitations/{invitation}', [MemberController::class, 'revokeInvite'])->middleware('permission:members.invite')->name('invitations.revoke');
     Route::get('/settings/branding', [BrandingController::class, 'edit'])->name('settings.branding');
     Route::put('/settings/branding', [BrandingController::class, 'update'])->middleware('permission:branding.update')->name('settings.branding.update');
 

@@ -1,11 +1,17 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Card, Tag, Button } from '@/Components/ui';
+import { Card, Tag, Button, Input } from '@/Components/ui';
 
-const props = defineProps({ deal: Object });
+const props = defineProps({ deal: Object, catalog: Array });
 
 const newQuote = useForm({ deal_id: props.deal.id, currency: 'USD', tax_rate: 0 });
 const createQuote = () => newQuote.post('/quotes');
+
+const prod = useForm({ product_id: '', quantity: 1, discount_pct: 0 });
+const addProduct = () => prod.post(`/deals/${props.deal.id}/products`, { preserveScroll: true, onSuccess: () => prod.reset() });
+const removeProduct = (pivotId) => router.delete(`/deals/${props.deal.id}/products/${pivotId}`, { preserveScroll: true });
+const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]';
 
 const statusColor = (s) => ({ open: 'info', won: 'positive', lost: 'critical' }[s] ?? 'neutral');
 const qStatusColor = (s) => ({ draft: 'neutral', sent: 'info', accepted: 'positive', declined: 'critical' }[s] ?? 'neutral');
@@ -36,6 +42,34 @@ const qStatusColor = (s) => ({ draft: 'neutral', sent: 'info', accepted: 'positi
             </Card>
 
             <div class="space-y-5">
+                <Card title="Products" subtitle="Line items — the deal amount is the sum of these">
+                    <ul v-if="deal.products.length" class="mb-4 divide-y divide-hairline-soft">
+                        <li v-for="p in deal.products" :key="p.pivot_id" class="flex items-center justify-between py-2.5 text-sm">
+                            <div>
+                                <span class="font-medium text-ink">{{ p.name }}</span>
+                                <span class="text-muted"> × {{ p.quantity }}<span v-if="p.discount_pct"> · -{{ p.discount_pct }}%</span></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="nums text-ink">{{ p.unit_price }}</span>
+                                <button class="text-faint hover:text-critical" @click="removeProduct(p.pivot_id)">✕</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <p v-else class="mb-4 text-sm text-muted">No products yet — add from the catalog to set the deal amount.</p>
+                    <form class="flex flex-wrap items-end gap-2" @submit.prevent="addProduct">
+                        <div class="min-w-40 flex-1">
+                            <label class="mb-1.5 block text-xs font-medium text-muted">Product</label>
+                            <select v-model="prod.product_id" :class="selStyle">
+                                <option value="">Select…</option>
+                                <option v-for="c in catalog" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                        </div>
+                        <Input v-model="prod.quantity" type="number" label="Qty" class="w-20" />
+                        <Input v-model="prod.discount_pct" type="number" label="Disc %" class="w-24" />
+                        <Button :loading="prod.processing" @click="addProduct">Add</Button>
+                    </form>
+                </Card>
+
                 <Card title="Quotes" subtitle="Proposals attached to this deal">
                     <template #header><Button size="sm" :loading="newQuote.processing" @click="createQuote">Create quote</Button></template>
                     <ul v-if="deal.quotes.length" class="divide-y divide-hairline-soft">

@@ -36,8 +36,16 @@ class ConditionEvaluator
      */
     protected function matchRule(array $rule, Model $subject): bool
     {
-        $actual = data_get($subject, $rule['field'] ?? '');
+        $field = (string) ($rule['field'] ?? '');
         $expected = $rule['value'] ?? null;
+
+        // Relation-count fields like "activities_count" → count the relation,
+        // enabling rules such as "no activity logged" (activities_count equals 0).
+        if (preg_match('/^(.+)_count$/', $field, $m) && method_exists($subject, $m[1])) {
+            $actual = $subject->{$m[1]}()->count();
+        } else {
+            $actual = data_get($subject, $field);
+        }
 
         return match ($rule['op'] ?? 'equals') {
             'equals' => $actual == $expected,

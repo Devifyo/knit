@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Automation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
+use App\Models\Deal;
+use App\Models\Lead;
 use App\Models\Workflow;
+use App\Models\WorkflowRun;
+use App\Modules\Automation\Jobs\RunWorkflowJob;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -112,6 +117,56 @@ class WorkflowController extends Controller
         $workflow->delete();
 
         return redirect('/workflows')->with('success', 'Workflow deleted.');
+    }
+
+    public function runs(Workflow $workflow): Response
+    {
+        $workflow->load('steps');
+        $runs = $workflow->runs()->with('runSteps')->latest()->limit(50)->get()
+            ->map(fn (WorkflowRun $r): array => [
+                'id' => $r->id,
+                'subject' => class_basename((string) $r->subject_type).' #'.$r->subject_id,
+                'status' => $r->status,
+                'started' => $r->created_at?->diffForHumans(),
+                'steps' => $workflow->steps->map(function ($step) use ($r): array {
+                    $ran = $r->runSteps->firstWhere('workflow_step_id', $step->id);
+
+                    return ['type' => $step->type, 'status' => $ran ? $ran->status : 'pending'];
+                })->all(),
+            ]);
+
+        return Inertia::render('Workflows/Runs', [
+            'workflow' => ['id' => $workflow->id, 'name' => $workflow->name, 'trigger_event' => $workflow->trigger_event],
+            'runs' => $runs,
+        ]);
+    }
+
+    /**
+     * Test-run a workflow against the most recent matching record, immediately.
+     */
+    public function testRun(Workflow $workflow): RedirectResponse
+    {
+        $model = [
+            'lead.created' => Lead::class,
+            'contact.created' => Contact::class,
+            'deal.created' => Deal::class,
+        ][$workflow->trigger_event] ?? null;
+
+        $subject = $model ? $model::query()->latest()->first() : null;
+        if (! $subject) {
+            return back()->with('error', 'No matching record to test against yet.');
+        }
+
+        $run = WorkflowRun::create([
+            'workflow_id' => $workflow->id,
+            'subject_type' => $subject::class,
+            'subject_id' => $subject->getKey(),
+            'status' => 'running',
+            'current_step' => 0,
+        ]);
+        RunWorkflowJob::dispatch($run->tenant_id, $run->id);
+
+        return redirect("/workflows/{$workflow->id}/runs")->with('success', 'Test run started.');
     }
 
     /** @return array<string, mixed> */

@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
+use App\Models\Invitation;
 use App\Models\Lead;
 use App\Models\Note;
 use App\Models\Pipeline;
@@ -20,6 +21,7 @@ use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
@@ -119,6 +121,14 @@ class DatabaseSeeder extends Seeder
             }
 
             Task::factory()->count(4)->create(['assigned_user_id' => $owner->id, 'created_by' => $owner->id]);
+
+            Invitation::create([
+                'email' => 'teammate@'.$tenant->slug.'.test',
+                'role' => 'Manager',
+                'token' => Str::random(48),
+                'invited_by' => $owner->id,
+                'expires_at' => now()->addDays(7),
+            ]);
 
             tenancy()->end();
         }

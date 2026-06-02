@@ -41,6 +41,24 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
                 </Card>
             </div>
 
+            <div class="space-y-5">
+            <!-- Deals -->
+            <Card title="Deals" subtitle="Opportunities linked to this contact">
+                <ul v-if="contact.deals?.length" class="divide-y divide-hairline-soft">
+                    <li v-for="d in contact.deals" :key="d.id" class="flex items-center justify-between py-2.5">
+                        <Link :href="`/deals/${d.id}`" class="min-w-0">
+                            <p class="truncate text-sm font-medium text-ink hover:text-[var(--brand)]">{{ d.name }}</p>
+                            <p class="text-xs text-muted">{{ d.stage }}<span v-if="d.quotes"> · {{ d.quotes }} quote{{ d.quotes === 1 ? '' : 's' }}</span></p>
+                        </Link>
+                        <div class="flex items-center gap-2">
+                            <span class="nums text-sm text-ink">{{ d.amount }}</span>
+                            <Tag size="sm" :color="d.status === 'won' ? 'positive' : d.status === 'lost' ? 'critical' : 'info'">{{ d.status }}</Tag>
+                        </div>
+                    </li>
+                </ul>
+                <p v-else class="text-sm text-muted">No deals yet.</p>
+            </Card>
+
             <!-- Timeline -->
             <Card title="Timeline" subtitle="Notes, calls, emails and system events">
                 <form class="mb-5 flex items-start gap-2" @submit.prevent="addNote">
@@ -59,6 +77,7 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
                 </ol>
                 <p v-else class="text-sm text-muted">No activity yet — add the first note above.</p>
             </Card>
+            </div>
         </div>
     </div>
 </template>

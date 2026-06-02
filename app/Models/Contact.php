@@ -10,6 +10,7 @@ use Database\Factories\ContactFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,6 +50,12 @@ class Contact extends Model implements AuditableContract, TenantOwned
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /** @return HasMany<Deal, $this> */
+    public function deals(): HasMany
+    {
+        return $this->hasMany(Deal::class)->latest();
     }
 
     /** @return MorphMany<Activity, $this> */

@@ -10,6 +10,7 @@ use Database\Factories\LeadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lead extends Model implements TenantOwned
@@ -46,5 +47,11 @@ class Lead extends Model implements TenantOwned
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'converted_to_contact_id');
+    }
+
+    /** @return MorphMany<Activity, $this> */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject')->latest();
     }
 }

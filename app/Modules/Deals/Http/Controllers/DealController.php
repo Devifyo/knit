@@ -7,7 +7,9 @@ namespace App\Modules\Deals\Http\Controllers;
 use App\Events\DealStageChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
+use App\Models\DealProduct;
 use App\Models\Pipeline;
+use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Stage;
 use App\Modules\Deals\Services\PricingService;
@@ -22,13 +24,14 @@ class DealController extends Controller
 
     public function show(Deal $deal): Response
     {
-        $deal->load(['contact:id,first_name,last_name', 'company:id,name', 'owner:id,name', 'stage:id,name', 'quotes', 'activities.user:id,name']);
+        $deal->load(['contact:id,first_name,last_name', 'company:id,name', 'owner:id,name', 'stage:id,name', 'quotes', 'products', 'activities.user:id,name']);
 
         return Inertia::render('Deals/Show', [
             'deal' => [
                 'id' => $deal->id,
                 'name' => $deal->name,
                 'amount' => $deal->formattedAmount(),
+                'currency' => $deal->currency,
                 'status' => $deal->status,
                 'stage' => $deal->stage?->name,
                 'probability' => $deal->probability,
@@ -37,6 +40,18 @@ class DealController extends Controller
                 'contact_id' => $deal->contact_id,
                 'company' => $deal->company?->name,
                 'owner' => $deal->owner?->name,
+                'products' => $deal->products->map(function (Product $p) use ($deal) {
+                    /** @var DealProduct $pivot */
+                    $pivot = $p->pivot;
+
+                    return [
+                        'pivot_id' => $pivot->id,
+                        'name' => $p->name,
+                        'quantity' => $pivot->quantity,
+                        'unit_price' => $this->pricing->format($pivot->unit_price, $deal->currency),
+                        'discount_pct' => $pivot->discount_pct,
+                    ];
+                }),
                 'quotes' => $deal->quotes->map(fn (Quote $q) => [
                     'id' => $q->id, 'number' => $q->number, 'status' => $q->status,
                     'total' => $this->pricing->totals($q)['total_formatted'],
@@ -46,7 +61,36 @@ class DealController extends Controller
                     'author' => $a->user?->name, 'at' => $a->created_at?->diffForHumans(),
                 ]),
             ],
+            'catalog' => Product::where('active', true)->get(['id', 'name', 'unit_price', 'currency']),
         ]);
+    }
+
+    public function addProduct(Request $request, Deal $deal): RedirectResponse
+    {
+        $data = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'discount_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $product = Product::findOrFail($data['product_id']);
+        $deal->products()->attach($product->id, [
+            'tenant_id' => tenant('id'),
+            'quantity' => $data['quantity'],
+            'unit_price' => $product->unit_price, // snapshot catalog price
+            'discount_pct' => $data['discount_pct'] ?? 0,
+        ]);
+        $deal->load('products')->recalculateAmountFromProducts();
+
+        return back()->with('success', 'Product added — deal amount updated.');
+    }
+
+    public function removeProduct(Deal $deal, int $pivotId): RedirectResponse
+    {
+        $deal->products()->wherePivot('id', $pivotId)->detach();
+        $deal->load('products')->recalculateAmountFromProducts();
+
+        return back()->with('success', 'Product removed.');
     }
 
     public function index(Request $request): Response

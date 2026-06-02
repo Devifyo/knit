@@ -9,6 +9,7 @@ use App\Models\Activity;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\CustomFieldDefinition;
+use App\Models\Deal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -47,7 +48,7 @@ class ContactController extends Controller
 
     public function show(Contact $contact): Response
     {
-        $contact->load(['company:id,name', 'owner:id,name', 'tags', 'activities.user:id,name']);
+        $contact->load(['company:id,name', 'owner:id,name', 'tags', 'activities.user:id,name', 'deals.quotes', 'deals.stage:id,name']);
 
         return Inertia::render('Contacts/Show', [
             'contact' => [
@@ -64,6 +65,14 @@ class ContactController extends Controller
                 'owner' => $contact->owner?->name,
                 'custom_fields' => $contact->custom_fields ?? [],
                 'tags' => $contact->tags->map(fn ($t) => ['name' => $t->name, 'color' => $t->color]),
+                'deals' => $contact->deals->map(fn (Deal $d) => [
+                    'id' => $d->id,
+                    'name' => $d->name,
+                    'amount' => $d->formattedAmount(),
+                    'stage' => $d->stage?->name,
+                    'status' => $d->status,
+                    'quotes' => $d->quotes->count(),
+                ]),
                 'activities' => $contact->activities->map(fn (Activity $a) => [
                     'id' => $a->id,
                     'type' => $a->type,
