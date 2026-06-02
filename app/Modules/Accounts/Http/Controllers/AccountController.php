@@ -6,6 +6,9 @@ namespace App\Modules\Accounts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Company;
+use App\Modules\Accounts\Http\Requests\StoreAccountRequest;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +29,20 @@ class AccountController extends Controller
                 'renewal_status' => $a->renewal_status,
             ])->all();
 
-        return Inertia::render('Accounts/Index', ['accounts' => $accounts]);
+        return Inertia::render('Accounts/Index', [
+            'accounts' => $accounts,
+            // Companies available to wrap as an account (those without one yet).
+            'companies' => Company::whereDoesntHave('account')
+                ->orderBy('name')
+                ->limit(200)
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function store(StoreAccountRequest $request): RedirectResponse
+    {
+        Account::create($request->validated());
+
+        return back()->with('success', 'Account created.');
     }
 }

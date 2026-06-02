@@ -7,7 +7,7 @@ import { useEcho } from '@/Composables/useEcho';
 import { useToastStore } from '@/Stores/toast';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const props = defineProps({ pipeline: Object, pipelines: Array, columns: Array });
+const props = defineProps({ pipeline: Object, pipelines: Array, columns: Array, contacts: { type: Array, default: () => [] }, companies: { type: Array, default: () => [] } });
 const { tenant } = useTenant();
 const { can } = usePermissions();
 const toast = useToastStore();
@@ -43,7 +43,7 @@ onMounted(() => {
 });
 
 const open = ref(false);
-const form = useForm({ name: '', amount: '', stage_id: props.columns[0]?.id });
+const form = useForm({ name: '', amount: '', stage_id: props.columns[0]?.id, contact_id: '', company_id: '' });
 const submit = () => form.post('/deals', { preserveScroll: true, onSuccess: () => { open.value = false; form.reset(); router.reload({ only: ['columns'] }); } });
 </script>
 
@@ -79,6 +79,20 @@ const submit = () => form.post('/deals', { preserveScroll: true, onSuccess: () =
                     <label class="mb-1.5 block text-xs font-medium text-muted">Stage</label>
                     <select v-model="form.stage_id" class="h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]">
                         <option v-for="c in columns" :key="c.id" :value="c.id">{{ c.title }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium text-muted">Contact <span class="text-faint">(optional)</span></label>
+                    <select v-model="form.contact_id" class="h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]">
+                        <option value="">—</option>
+                        <option v-for="c in contacts" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium text-muted">Company <span class="text-faint">(optional — inherited from contact if blank)</span></label>
+                    <select v-model="form.company_id" class="h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]">
+                        <option value="">—</option>
+                        <option v-for="c in companies" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
                 </div>
             </form>

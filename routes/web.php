@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\SearchController;
 use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\AuditController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
@@ -81,6 +82,9 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
     Route::get('/guide', [GuideController::class, 'index'])->name('guide.index');
     Route::get('/guide/{slug}', [GuideController::class, 'show'])->name('guide.show');
 
+    // Global ⌘K record search (returns JSON; tenant-scoped, view-permission filtered)
+    Route::get('/search', SearchController::class)->name('search');
+
     // Projects & tasks (kanban, subtasks, time tracking, file sharing)
     Route::middleware('permission:projects.view')->group(function () {
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
@@ -127,6 +131,7 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->middleware('permission:accounts.view')->name('accounts.index');
+    Route::post('/accounts', [AccountController::class, 'store'])->middleware('permission:accounts.manage')->name('accounts.store');
 
     // Shared inbox
     Route::middleware('permission:inbox.view')->group(function () {

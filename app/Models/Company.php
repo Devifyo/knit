@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -48,6 +49,12 @@ class Company extends Model implements TenantOwned
     public function deals(): HasMany
     {
         return $this->hasMany(Deal::class);
+    }
+
+    /** @return HasOne<Account, $this> */
+    public function account(): HasOne
+    {
+        return $this->hasOne(Account::class);
     }
 
     /** @return MorphToMany<Tag, $this> */

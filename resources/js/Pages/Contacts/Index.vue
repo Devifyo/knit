@@ -10,6 +10,8 @@ const { can } = usePermissions();
 
 const search = ref(props.search ?? '');
 watchDebounced(search, (v) => router.get('/contacts', { search: v }, { preserveState: true, replace: true, preserveScroll: true }), { debounce: 300 });
+// Keep the box in sync when arriving via a clean /contacts link (resets a stale query).
+watch(() => props.search, (v) => { if ((v ?? '') !== search.value) search.value = v ?? ''; });
 
 const open = ref(false);
 const form = useForm({ first_name: '', last_name: '', email: '', phone: '', job_title: '', company_id: '', custom_fields: {} });

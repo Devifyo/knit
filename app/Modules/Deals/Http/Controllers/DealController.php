@@ -6,6 +6,8 @@ namespace App\Modules\Deals\Http\Controllers;
 
 use App\Events\DealStageChanged;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\DealProduct;
 use App\Models\Pipeline;
@@ -136,6 +138,10 @@ class DealController extends Controller
             'pipeline' => $pipeline ? ['id' => $pipeline->id, 'name' => $pipeline->name] : null,
             'pipelines' => Pipeline::where('type', 'deal')->get(['id', 'name']),
             'columns' => $columns,
+            // Optional links offered in the "New deal" modal.
+            'contacts' => Contact::orderBy('first_name')->limit(200)->get(['id', 'first_name', 'last_name'])
+                ->map(fn (Contact $c) => ['id' => $c->id, 'name' => $c->name]),
+            'companies' => Company::orderBy('name')->limit(200)->get(['id', 'name']),
         ]);
     }
 
@@ -182,9 +188,17 @@ class DealController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'stage_id' => ['required', 'integer', 'exists:stages,id'],
+            'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
+            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
         ]);
 
         $stage = Stage::findOrFail($data['stage_id']);
+
+        // If a contact is linked but no company, inherit the contact's company.
+        $companyId = $data['company_id'] ?? null;
+        if (! $companyId && ! empty($data['contact_id'])) {
+            $companyId = Contact::find($data['contact_id'])?->company_id;
+        }
 
         Deal::create([
             'name' => $data['name'],
@@ -193,6 +207,8 @@ class DealController extends Controller
             'stage_id' => $stage->id,
             'probability' => $stage->probability,
             'owner_id' => $request->user()->id,
+            'contact_id' => $data['contact_id'] ?? null,
+            'company_id' => $companyId,
         ]);
 
         return back()->with('success', 'Deal created.');
