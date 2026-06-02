@@ -9,6 +9,7 @@ const tabs = [
     { label: 'Security', href: '/settings/security' },
     { label: 'Audit log', href: '/settings/audit' },
     { label: 'Developer', href: '/settings/webhooks' },
+    { label: 'Modules', href: '/settings/modules' },
 ];
 </script>
 

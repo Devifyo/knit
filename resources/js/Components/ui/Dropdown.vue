@@ -1,7 +1,10 @@
 <script setup>
 import { Menu, MenuButton, MenuItems } from '@headlessui/vue';
 
-defineProps({ align: { type: String, default: 'right' } });
+defineProps({
+    align: { type: String, default: 'right' }, // right | left
+    up: { type: Boolean, default: false },      // open upward (e.g. footer menus)
+});
 </script>
 
 <template>
@@ -14,7 +17,7 @@ defineProps({ align: { type: String, default: 'right' } });
             leave-active-class="transition duration-100 ease-in"
             leave-from-class="opacity-100" leave-to-class="opacity-0 scale-95"
         >
-            <MenuItems :class="['absolute z-40 mt-2 w-56 origin-top rounded-[var(--radius-card)] border border-hairline bg-surface p-1 shadow-e2 focus:outline-none', align === 'right' ? 'right-0' : 'left-0']">
+            <MenuItems :class="['absolute z-40 w-56 rounded-[var(--radius-card)] border border-hairline bg-surface p-1 shadow-e2 focus:outline-none', align === 'right' ? 'right-0' : 'left-0', up ? 'bottom-full mb-2 origin-bottom' : 'mt-2 origin-top']">
                 <slot />
             </MenuItems>
         </transition>

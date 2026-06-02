@@ -64,10 +64,14 @@ const icons = {
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
 
-const groups = [
+// Primary navigation. The first (label-less) section is always pinned; the rest
+// are collapsible. Admin/workspace pages live in the account menu, not here.
+const baseSections = [
     { items: [
         { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
         { label: 'Reports', href: '/reports', icon: 'reports' },
+    ] },
+    { label: 'Sales', items: [
         { label: 'Contacts', href: '/contacts', icon: 'contacts' },
         { label: 'Companies', href: '/companies', icon: 'companies' },
         { label: 'Leads', href: '/leads', icon: 'leads' },
@@ -95,27 +99,43 @@ const groups = [
         { label: 'Tasks', href: '/tasks', icon: 'tasks' },
         { label: 'Workflows', href: '/workflows', icon: 'workflows' },
     ] },
-    { label: 'Workspace', items: [
-        { label: 'Members', href: '/members', icon: 'members' },
-        { label: 'Billing', href: '/settings/billing', icon: 'billing' },
-        { label: 'Security', href: '/settings/security', icon: 'security' },
-        { label: 'Audit log', href: '/settings/audit', icon: 'audit' },
-        { label: 'Developer', href: '/settings/webhooks', icon: 'developer' },
-        { label: 'Modules', href: '/settings/modules', icon: 'modules' },
-        { label: 'Settings', href: '/settings/branding', icon: 'settings' },
-    ] },
 ];
 
-// Inject a dynamic "Industry" group for the tenant's enabled modules.
-const navGroups = computed(() => {
+// Workspace / admin — surfaced in the account menu and ⌘K, not the main nav.
+const workspaceLinks = [
+    { label: 'Settings', href: '/settings/branding', icon: 'settings' },
+    { label: 'Members', href: '/members', icon: 'members' },
+    { label: 'Billing', href: '/settings/billing', icon: 'billing' },
+    { label: 'Security', href: '/settings/security', icon: 'security' },
+    { label: 'Audit log', href: '/settings/audit', icon: 'audit' },
+    { label: 'Developer', href: '/settings/webhooks', icon: 'developer' },
+    { label: 'Modules', href: '/settings/modules', icon: 'modules' },
+];
+
+// Inject a dynamic "Industry" section for the tenant's enabled modules.
+const sections = computed(() => {
     const entries = page.props.industryNav ?? [];
-    if (!entries.length) return groups;
-    const industry = { label: 'Industry', items: entries.map((e) => ({ label: e.label, href: e.href, icon: e.icon })) };
-    // Place it just before the Workspace group (the last group).
-    return [...groups.slice(0, -1), industry, groups[groups.length - 1]];
+    if (!entries.length) return baseSections;
+    return [...baseSections, { label: 'Industry', items: entries.map((e) => ({ label: e.label, href: e.href, icon: e.icon })) }];
 });
 
-const commands = computed(() => navGroups.value.flatMap((g) => g.items).map((n, i) => ({ id: i, label: n.label, href: n.href, group: 'Go to' })));
+const isActive = (href) => page.url === href || (href !== '/dashboard' && page.url.startsWith(href));
+const sectionHasActive = (section) => section.items.some((i) => isActive(i.href));
+
+// Collapsible sections — state persisted; a section with the active route always shows.
+const collapsed = ref({});
+onMounted(() => { try { collapsed.value = JSON.parse(localStorage.getItem('knit-nav-collapsed') || '{}'); } catch { collapsed.value = {}; } });
+const toggleSection = (label) => {
+    collapsed.value = { ...collapsed.value, [label]: !collapsed.value[label] };
+    localStorage.setItem('knit-nav-collapsed', JSON.stringify(collapsed.value));
+};
+const sectionOpen = (section) => !section.label || !collapsed.value[section.label] || sectionHasActive(section);
+
+const commands = computed(() => [
+    ...sections.value.flatMap((s) => s.items),
+    ...workspaceLinks,
+].map((n, i) => ({ id: i, label: n.label, href: n.href, group: 'Go to' })));
+const openSearch = () => window.dispatchEvent(new CustomEvent('knit:open-command-palette'));
 const logout = () => router.post('/logout');
 
 // Dark mode — persisted to localStorage, applied to <html> (init script in app.blade).
@@ -128,38 +148,79 @@ const toggleTheme = () => {
 };
 const sun = icon('M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z');
 const moon = icon('M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z');
-const isActive = (href) => page.url === href || (href !== '/dashboard' && page.url.startsWith(href));
+const chevron = icon('M6 9l6 6 6-6');
 </script>
 
 <template>
     <div class="flex min-h-[100dvh] bg-canvas">
         <!-- Sidebar -->
-        <aside class="hidden w-[248px] shrink-0 flex-col border-r border-hairline bg-surface lg:flex">
-            <div class="flex h-[60px] items-center gap-2.5 px-5">
-                <img v-if="branding.logo" :src="branding.logo" alt="" class="size-7 rounded-lg object-cover" />
-                <span v-else class="grid size-7 place-items-center rounded-lg text-sm font-bold text-white" :style="{ background: 'var(--brand)' }">{{ (branding.name || 'K')[0] }}</span>
+        <aside class="hidden w-[256px] shrink-0 flex-col border-r border-hairline bg-surface lg:flex">
+            <!-- Workspace identity -->
+            <div class="flex h-[60px] items-center gap-2.5 px-4">
+                <img v-if="branding.logo" :src="branding.logo" alt="" class="size-8 rounded-lg object-cover ring-1 ring-hairline" />
+                <span v-else class="grid size-8 place-items-center rounded-lg text-sm font-bold text-white shadow-e1" :style="{ background: 'var(--brand)' }">{{ (branding.name || 'K')[0] }}</span>
                 <span class="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">{{ branding.name || 'Knit' }}</span>
             </div>
-            <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-2">
-                <div v-for="(group, gi) in navGroups" :key="gi" class="space-y-0.5">
-                    <p v-if="group.label" class="px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wider text-faint">{{ group.label }}</p>
-                    <Link
-                        v-for="item in group.items"
-                        :key="item.label"
-                        :href="item.href"
-                        :class="[
-                            'relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-[13px] font-medium transition-colors',
-                            isActive(item.href) ? 'brand-wash text-[var(--brand)]' : 'text-ink-soft hover:bg-sunken',
-                        ]"
+
+            <!-- Search -->
+            <div class="px-3 pb-2">
+                <button
+                    class="flex w-full items-center gap-2 rounded-[var(--radius-control)] bg-sunken px-2.5 py-2 text-[13px] text-muted ring-1 ring-inset ring-transparent transition-colors hover:ring-hairline"
+                    @click="openSearch"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" class="size-[18px]" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" stroke-linecap="round" /></svg>
+                    <span class="flex-1 text-left">Search…</span>
+                    <kbd class="rounded border border-hairline bg-surface px-1.5 py-0.5 text-[10px] font-sans text-faint">⌘K</kbd>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-1">
+                <div v-for="(section, si) in sections" :key="si" :class="section.label ? 'pt-2' : ''">
+                    <button
+                        v-if="section.label"
+                        class="group flex w-full items-center justify-between rounded-[var(--radius-control)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-faint transition-colors hover:text-muted"
+                        @click="toggleSection(section.label)"
                     >
-                        <span v-if="isActive(item.href)" class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-[var(--brand)]" />
-                        <component :is="icons[item.icon]" :class="isActive(item.href) ? 'text-[var(--brand)]' : 'text-faint'" />
-                        {{ item.label }}
-                    </Link>
+                        {{ section.label }}
+                        <component :is="chevron" :class="['size-3.5 opacity-0 transition-transform group-hover:opacity-100', sectionOpen(section) ? '' : '-rotate-90']" />
+                    </button>
+                    <div v-show="sectionOpen(section)" class="mt-0.5 space-y-0.5">
+                        <Link
+                            v-for="item in section.items"
+                            :key="item.label"
+                            :href="item.href"
+                            :class="[
+                                'group relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-[7px] text-[13px] font-medium transition-colors',
+                                isActive(item.href) ? 'brand-wash text-[var(--brand)]' : 'text-ink-soft hover:bg-sunken',
+                            ]"
+                        >
+                            <span v-if="isActive(item.href)" class="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r bg-[var(--brand)]" />
+                            <component :is="icons[item.icon]" :class="['size-[18px] shrink-0', isActive(item.href) ? 'text-[var(--brand)]' : 'text-faint group-hover:text-muted']" />
+                            <span class="truncate">{{ item.label }}</span>
+                        </Link>
+                    </div>
                 </div>
             </nav>
-            <div class="border-t border-hairline-soft px-4 py-3 text-[11px] text-faint">
-                <kbd class="rounded border border-hairline bg-sunken px-1.5 py-0.5 font-sans">⌘K</kbd> to search
+
+            <!-- Account menu -->
+            <div class="border-t border-hairline-soft p-2">
+                <Dropdown v-if="user" align="left" up class="block w-full">
+                    <template #trigger>
+                        <button class="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-left transition-colors hover:bg-sunken">
+                            <Avatar :name="user.name" />
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-[13px] font-medium text-ink">{{ user.name }}</p>
+                                <p class="truncate text-[11px] text-muted">{{ user.email }}</p>
+                            </div>
+                            <component :is="chevron" class="size-4 shrink-0 -rotate-90 text-faint" />
+                        </button>
+                    </template>
+                    <p class="px-2.5 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Workspace</p>
+                    <DropdownItem v-for="w in workspaceLinks" :key="w.href" :href="w.href">{{ w.label }}</DropdownItem>
+                    <div class="my-1 border-t border-hairline-soft" />
+                    <DropdownItem as="button" @click="logout">Sign out</DropdownItem>
+                </Dropdown>
             </div>
         </aside>
 
@@ -169,7 +230,14 @@ const isActive = (href) => page.url === href || (href !== '/dashboard' && page.u
                 <slot name="header">
                     <h1 class="text-sm font-semibold tracking-[-0.01em] text-ink">{{ $page.props.title ?? '' }}</h1>
                 </slot>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1">
+                    <button
+                        class="grid size-8 place-items-center rounded-[var(--radius-control)] text-faint transition-colors hover:bg-sunken hover:text-ink-soft lg:hidden"
+                        title="Search"
+                        @click="openSearch"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" class="size-[18px]" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" stroke-linecap="round" /></svg>
+                    </button>
                     <button
                         class="grid size-8 place-items-center rounded-[var(--radius-control)] text-faint transition-colors hover:bg-sunken hover:text-ink-soft"
                         :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
@@ -177,18 +245,6 @@ const isActive = (href) => page.url === href || (href !== '/dashboard' && page.u
                     >
                         <component :is="isDark ? sun : moon" />
                     </button>
-                    <Dropdown v-if="user">
-                        <template #trigger>
-                            <button class="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80"><Avatar :name="user.name" /></button>
-                        </template>
-                        <div class="px-3 py-2">
-                            <p class="text-sm font-medium text-ink">{{ user.name }}</p>
-                            <p class="truncate text-xs text-muted">{{ user.email }}</p>
-                        </div>
-                        <div class="my-1 border-t border-hairline-soft" />
-                        <DropdownItem href="/settings/branding">Settings</DropdownItem>
-                        <DropdownItem as="button" @click="logout">Sign out</DropdownItem>
-                    </Dropdown>
                 </div>
             </header>
             <main class="flex-1 overflow-y-auto">

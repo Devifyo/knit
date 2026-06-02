@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import { router } from '@inertiajs/vue3';
 import {
@@ -27,6 +27,11 @@ onKeyStroke(['k', 'K'], (e) => {
         open.value = !open.value;
     }
 });
+
+// Allow any UI affordance (e.g. the header search button) to open it.
+const openPalette = () => { open.value = true; };
+onMounted(() => window.addEventListener('knit:open-command-palette', openPalette));
+onUnmounted(() => window.removeEventListener('knit:open-command-palette', openPalette));
 
 const filtered = computed(() =>
     query.value === ''
