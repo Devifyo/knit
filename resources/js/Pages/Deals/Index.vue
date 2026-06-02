@@ -13,8 +13,11 @@ const { can } = usePermissions();
 const toast = useToastStore();
 
 // Local reactive board (drag mutates this; Inertia reloads replace it).
-const board = ref(structuredClone(props.columns));
-watch(() => props.columns, (v) => { board.value = structuredClone(v); });
+// JSON clone — the board is plain data and Vue's reactive proxy can't be
+// structuredCloned.
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const board = ref(clone(props.columns));
+watch(() => props.columns, (v) => { board.value = clone(v); });
 
 function onCardMoved({ card, toColumn, index }) {
     router.patch(`/deals/${card.id}/move`, { stage_id: toColumn, board_order: index }, {

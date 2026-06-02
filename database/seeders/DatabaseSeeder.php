@@ -11,7 +11,11 @@ use App\Models\Deal;
 use App\Models\Lead;
 use App\Models\Note;
 use App\Models\Pipeline;
+use App\Models\Product;
+use App\Models\Quote;
+use App\Models\Task;
 use App\Models\User;
+use App\Models\Workflow;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use Illuminate\Database\Seeder;
@@ -89,6 +93,32 @@ class DatabaseSeeder extends Seeder
                 'renewal_date' => now()->addMonths(rand(1, 10)),
                 'renewal_status' => 'upcoming',
             ]));
+
+            // Phase 3 — products, a follow-up workflow, a sample quote, tasks.
+            $products = Product::factory()->count(5)->create();
+
+            $wf = Workflow::create(['name' => 'New lead follow-up', 'trigger_event' => 'lead.created', 'enabled' => true]);
+            foreach ([
+                ['type' => 'wait', 'config' => ['days' => 1]],
+                ['type' => 'send_email', 'config' => ['to_field' => 'email', 'subject' => 'Thanks for your interest', 'body' => 'Following up on your enquiry.']],
+                ['type' => 'condition', 'config' => ['condition' => ['operator' => 'and', 'rules' => [['field' => 'status', 'op' => 'equals', 'value' => 'new']]]]],
+                ['type' => 'create_task', 'config' => ['title' => 'Call lead — no reply', 'due_in_days' => 1, 'assign_to_field' => 'assigned_user_id']],
+            ] as $i => $step) {
+                $wf->steps()->create([...$step, 'order' => $i]);
+            }
+
+            $quote = Quote::create([
+                'number' => 'Q-'.now()->format('Ymd').'-0001', 'currency' => 'USD', 'tax_rate' => 8.5,
+                'status' => 'draft', 'created_by' => $owner->id,
+            ]);
+            foreach ($products->take(2)->values() as $pos => $product) {
+                $quote->items()->create([
+                    'product_id' => $product->id, 'name' => $product->name,
+                    'quantity' => $pos + 1, 'unit_price' => $product->unit_price, 'discount_pct' => $pos * 5, 'position' => $pos,
+                ]);
+            }
+
+            Task::factory()->count(4)->create(['assigned_user_id' => $owner->id, 'created_by' => $owner->id]);
 
             tenancy()->end();
         }

@@ -57,16 +57,27 @@ Deferred to later phases: product catalog / CPQ on deals (Phase 3); saved filter
 bulk actions + global ⌘K search wiring (palette shell exists); multi-owner pivot +
 social enrichment hook (single owner_id for now).
 
-## 🔜 Phase 3 — Sales Automation (next)
-Workflow engine, tasks/reminders, calendar sync (Google/Outlook adapters), meeting
-scheduling, follow-up sequences/cadences. Quote/Proposal builder (templates,
-dynamic pricing, **PDF**, e-signature adapter, approvals). CPQ (product catalog,
-pricing rules, discounts, subscriptions, taxes, multi-currency).
+## ✅ Phase 3 — Sales Automation
+Workflow engine (`App\Modules\Automation`): per-tenant workflows with a trigger +
+ordered steps (wait, send_email, create_task, update_field, add_tag, assign_owner,
+webhook, condition/branch). Triggers fire on record events (lead/contact/deal
+created); runs persist in `workflow_runs` + `workflow_run_steps`, are **idempotent**
+(each step recorded once), **queued** via `RunWorkflowJob`, and **delayed** waits
+re-dispatch a continuation (Redis/Horizon honors the delay; sync runs inline).
+Tasks/reminders. CPQ: product catalog, Quotes + line items (per-line discount,
+quote-level tax, **multi-currency**), `PricingService` (integer minor units), and
+**branded PDF export** via dompdf.
 
-**Acceptance:** "new lead → wait 1 day → email → if no reply, create task" runs on
-the queue; a proposal renders to PDF with correct totals/tax/currency.
+**Acceptance — both met (6 new Pest tests, 29 total):** "new lead → wait 1 day →
+send email → if still new, create task" runs end-to-end on the queue (and stops at
+the branch when the condition fails); a quote renders to a PDF with correct
+subtotal/discount/tax/total in the chosen currency. Pint + PHPStan L6 green.
 
-## ⬜ Phase 4 — Communication & Inbox
+Deferred to integration phases: calendar sync (Google/Outlook) + meeting scheduling
++ e-signature + approval chains (adapters, Phase 10); SMS/WhatsApp steps (Phase 6);
+visual step editor (template-based creation for now).
+
+## 🔜 Phase 4 — Communication & Inbox (next)
 Shared inbox, unified timeline, email threading/tracking/read receipts, internal
 comments/mentions, team chat (Reverb presence). VoIP/video behind adapters.
 

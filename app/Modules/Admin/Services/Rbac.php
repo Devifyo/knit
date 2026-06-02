@@ -45,6 +45,10 @@ final class Rbac
             'leads.view', 'leads.manage', 'leads.convert',
             'deals.view', 'deals.manage',
             'accounts.view', 'accounts.manage',
+            // Automation & CPQ
+            'workflows.view', 'workflows.manage',
+            'tasks.view', 'tasks.manage',
+            'quotes.view', 'quotes.manage',
         ];
     }
 
@@ -70,6 +74,9 @@ final class Rbac
                 'leads.view', 'leads.manage', 'leads.convert',
                 'deals.view', 'deals.manage',
                 'accounts.view', 'accounts.manage',
+                'workflows.view', 'workflows.manage',
+                'tasks.view', 'tasks.manage',
+                'quotes.view', 'quotes.manage',
             ],
             self::AGENT => [
                 'notes.view', 'notes.create',
@@ -78,6 +85,8 @@ final class Rbac
                 'leads.view', 'leads.manage', 'leads.convert',
                 'deals.view', 'deals.manage',
                 'accounts.view',
+                'tasks.view', 'tasks.manage',
+                'quotes.view', 'quotes.manage',
             ],
         ];
     }

@@ -171,5 +171,18 @@ Contact, Lead, Pipeline, Stage, Deal, Account, Activity, Tag, CustomFieldDefinit
 currency (`Deal::formattedAmount()`). Real-time: `DealStageChanged` →
 `tenant.{id}.pipeline.{pipelineId}`; `NoteCreated` → `tenant.{id}.notifications`.
 
-**Current status:** Phases 0–2 complete (23 Pest tests green). Phase 3 (Sales
-Automation) is next and not yet started.
+## Automation engine (Phase 3)
+
+`App\Modules\Automation`: `WorkflowEngine::trigger($event, $model)` (tenant-guarded)
+starts a `WorkflowRun` per matching enabled workflow and queues `RunWorkflowJob`.
+The job initializes the run's tenant, executes ordered `WorkflowStep`s, and is
+**idempotent** (each step logged once in `workflow_run_steps`, skipped on retry) and
+**resumable** (`wait` parks the run + re-dispatches a delayed continuation). Step
+types: wait, send_email, create_task, update_field, add_tag, assign_owner, webhook,
+condition (branch via `ConditionEvaluator` — AND/OR rule tree; false stops the run).
+Triggers are registered in `AppServiceProvider` on model `created` events. CPQ:
+`PricingService` does all money math in integer minor units; quote PDFs render via
+`resources/views/pdf/quote.blade.php` (dompdf).
+
+**Current status:** Phases 0–3 complete (29 Pest tests green). Phase 4
+(Communication & Inbox) is next and not yet started.

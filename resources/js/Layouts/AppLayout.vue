@@ -34,6 +34,9 @@ const icons = {
     leads: icon('M13 2L3 14h7l-1 8 10-12h-7l1-8z'),
     deals: icon('M3 7h18M3 7l2 13h14l2-13M9 11v5M15 11v5'),
     accounts: icon('M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z'),
+    quotes: icon('M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M8 13h8M8 17h8'),
+    tasks: icon('M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11'),
+    workflows: icon('M6 3v12M6 21a3 3 0 100-6 3 3 0 000 6zM6 3a3 3 0 100 0M18 9a3 3 0 100-6 3 3 0 000 6zm0 0a9 9 0 01-9 9'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -45,7 +48,12 @@ const groups = [
         { label: 'Companies', href: '/companies', icon: 'companies' },
         { label: 'Leads', href: '/leads', icon: 'leads' },
         { label: 'Deals', href: '/deals', icon: 'deals' },
+        { label: 'Quotes', href: '/quotes', icon: 'quotes' },
         { label: 'Accounts', href: '/accounts', icon: 'accounts' },
+    ] },
+    { label: 'Automate', items: [
+        { label: 'Tasks', href: '/tasks', icon: 'tasks' },
+        { label: 'Workflows', href: '/workflows', icon: 'workflows' },
     ] },
     { label: 'Workspace', items: [
         { label: 'Members', href: '/members', icon: 'members' },

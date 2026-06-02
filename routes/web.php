@@ -7,9 +7,12 @@ use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
 use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
+use App\Modules\Automation\Http\Controllers\TaskController;
+use App\Modules\Automation\Http\Controllers\WorkflowController;
 use App\Modules\Contacts\Http\Controllers\CompanyController;
 use App\Modules\Contacts\Http\Controllers\ContactController;
 use App\Modules\Deals\Http\Controllers\DealController;
+use App\Modules\Deals\Http\Controllers\QuoteController;
 use App\Modules\Leads\Http\Controllers\LeadController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -51,6 +54,23 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->middleware('permission:accounts.view')->name('accounts.index');
+
+    // Automation — workflows
+    Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');
+    Route::post('/workflows', [WorkflowController::class, 'store'])->middleware('permission:workflows.manage')->name('workflows.store');
+    Route::patch('/workflows/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:workflows.manage')->name('workflows.toggle');
+
+    // Tasks
+    Route::get('/tasks', [TaskController::class, 'index'])->middleware('permission:tasks.view')->name('tasks.index');
+    Route::post('/tasks', [TaskController::class, 'store'])->middleware('permission:tasks.manage')->name('tasks.store');
+    Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->middleware('permission:tasks.manage')->name('tasks.toggle');
+
+    // Quotes / CPQ
+    Route::get('/quotes', [QuoteController::class, 'index'])->middleware('permission:quotes.view')->name('quotes.index');
+    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->middleware('permission:quotes.view')->name('quotes.show');
+    Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->middleware('permission:quotes.view')->name('quotes.pdf');
+    Route::post('/quotes', [QuoteController::class, 'store'])->middleware('permission:quotes.manage')->name('quotes.store');
+    Route::post('/quotes/{quote}/items', [QuoteController::class, 'addItem'])->middleware('permission:quotes.manage')->name('quotes.items');
 
     // Notes (Phase 1 demo resource)
     Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');
