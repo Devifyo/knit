@@ -2,22 +2,23 @@
 defineProps({
     title: { type: String, default: null },
     subtitle: { type: String, default: null },
+    flush: { type: Boolean, default: false }, // remove body padding (e.g. for tables)
 });
 </script>
 
 <template>
-    <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div v-if="title || $slots.header" class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-            <div>
-                <h3 v-if="title" class="text-sm font-semibold text-gray-900">{{ title }}</h3>
-                <p v-if="subtitle" class="text-xs text-gray-500">{{ subtitle }}</p>
+    <div class="rounded-[var(--radius-card)] border border-hairline bg-surface shadow-e1">
+        <div v-if="title || $slots.header" class="flex items-center justify-between gap-3 border-b border-hairline-soft px-5 py-4">
+            <div class="min-w-0">
+                <h3 v-if="title" class="truncate text-sm font-semibold tracking-[-0.01em] text-ink">{{ title }}</h3>
+                <p v-if="subtitle" class="mt-0.5 truncate text-xs text-muted">{{ subtitle }}</p>
             </div>
             <slot name="header" />
         </div>
-        <div class="p-5">
+        <div :class="flush ? '' : 'p-5'">
             <slot />
         </div>
-        <div v-if="$slots.footer" class="border-t border-gray-100 px-5 py-3">
+        <div v-if="$slots.footer" class="border-t border-hairline-soft px-5 py-3">
             <slot name="footer" />
         </div>
     </div>

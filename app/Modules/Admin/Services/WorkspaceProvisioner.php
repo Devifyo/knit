@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Admin\Services;
 
+use App\Models\CustomFieldDefinition;
+use App\Models\Pipeline;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +44,8 @@ class WorkspaceProvisioner
             $this->seedRolesAndPermissions($tenant);
 
             $owner = $this->createOwner($tenant, $data);
+
+            $this->seedCrmDefaults($tenant);
 
             return $tenant->setRelation('owner', $owner);
         });
@@ -85,6 +89,44 @@ class WorkspaceProvisioner
         $user->assignRole(Rbac::OWNER);
 
         return $user;
+    }
+
+    /**
+     * Seed the default sales pipeline + stages and a starter custom field.
+     */
+    public function seedCrmDefaults(Tenant $tenant): void
+    {
+        tenancy()->initialize($tenant);
+
+        try {
+            $pipeline = Pipeline::create([
+                'name' => 'Sales Pipeline',
+                'type' => 'deal',
+                'is_default' => true,
+            ]);
+
+            $stages = [
+                ['name' => 'New', 'probability' => 10, 'type' => 'open'],
+                ['name' => 'Qualified', 'probability' => 30, 'type' => 'open'],
+                ['name' => 'Proposal', 'probability' => 60, 'type' => 'open'],
+                ['name' => 'Negotiation', 'probability' => 80, 'type' => 'open'],
+                ['name' => 'Won', 'probability' => 100, 'type' => 'won'],
+                ['name' => 'Lost', 'probability' => 0, 'type' => 'lost'],
+            ];
+            foreach ($stages as $i => $stage) {
+                $pipeline->stages()->create([...$stage, 'order' => $i]);
+            }
+
+            CustomFieldDefinition::create([
+                'entity' => 'contact',
+                'key' => 'linkedin',
+                'label' => 'LinkedIn',
+                'type' => 'text',
+                'order' => 0,
+            ]);
+        } finally {
+            tenancy()->end();
+        }
     }
 
     protected function uniqueSlug(string $name): string

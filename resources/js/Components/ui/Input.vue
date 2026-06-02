@@ -15,17 +15,17 @@ defineEmits(['update:modelValue']);
 
 const id = useId();
 const inputClasses = computed(() => [
-    'block w-full rounded-lg border bg-white px-3 py-2 text-sm shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2',
+    'block w-full rounded-[var(--radius-control)] bg-surface px-3 h-9 text-sm text-ink ring-1 ring-inset transition-[box-shadow] duration-150 placeholder:text-faint focus:outline-none',
     props.error
-        ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-        : 'border-gray-300 focus:border-brand-500 focus:ring-brand-200',
-    props.disabled ? 'bg-gray-50 text-gray-500' : '',
+        ? 'ring-critical/60 focus:ring-critical'
+        : 'ring-hairline focus:ring-2 focus:ring-[var(--brand)]',
+    props.disabled ? 'bg-sunken text-muted' : '',
 ]);
 </script>
 
 <template>
     <div>
-        <label v-if="label" :for="id" class="mb-1.5 block text-sm font-medium text-gray-700">
+        <label v-if="label" :for="id" class="mb-1.5 block text-xs font-medium text-muted">
             {{ label }}
         </label>
         <input
@@ -35,9 +35,10 @@ const inputClasses = computed(() => [
             :placeholder="placeholder"
             :disabled="disabled"
             :class="inputClasses"
+            v-bind="$attrs"
             @input="$emit('update:modelValue', $event.target.value)"
         />
-        <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
-        <p v-else-if="hint" class="mt-1 text-xs text-gray-500">{{ hint }}</p>
+        <p v-if="error" class="mt-1 text-xs text-critical">{{ error }}</p>
+        <p v-else-if="hint" class="mt-1 text-xs text-muted">{{ hint }}</p>
     </div>
 </template>

@@ -2,26 +2,34 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-    color: { type: String, default: 'gray' }, // gray | brand | green | yellow | red | blue
+    color: { type: String, default: 'neutral' }, // neutral | brand | positive | warning | critical | info
     size: { type: String, default: 'md' }, // sm | md
+    dot: { type: Boolean, default: false },
 });
 
 const colors = {
-    gray: 'bg-gray-100 text-gray-700 ring-gray-200',
-    brand: 'bg-brand-50 text-brand-700 ring-brand-200',
-    green: 'bg-green-50 text-green-700 ring-green-200',
-    yellow: 'bg-yellow-50 text-yellow-700 ring-yellow-200',
-    red: 'bg-red-50 text-red-700 ring-red-200',
-    blue: 'bg-blue-50 text-blue-700 ring-blue-200',
+    neutral: 'bg-sunken text-ink-soft ring-hairline',
+    brand: 'brand-wash text-[var(--brand)] ring-transparent',
+    positive: 'bg-positive/10 text-positive ring-positive/15',
+    warning: 'bg-warning/10 text-warning ring-warning/15',
+    critical: 'bg-critical/10 text-critical ring-critical/15',
+    info: 'bg-info/10 text-info ring-info/15',
+};
+const dotColor = {
+    neutral: 'bg-faint', brand: 'bg-[var(--brand)]', positive: 'bg-positive',
+    warning: 'bg-warning', critical: 'bg-critical', info: 'bg-info',
 };
 
 const classes = computed(() => [
-    'inline-flex items-center gap-1 rounded-full font-medium ring-1 ring-inset',
-    colors[props.color] ?? colors.gray,
-    props.size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs',
+    'inline-flex items-center gap-1.5 rounded-full font-medium ring-1 ring-inset whitespace-nowrap',
+    colors[props.color] ?? colors.neutral,
+    props.size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs',
 ]);
 </script>
 
 <template>
-    <span :class="classes"><slot /></span>
+    <span :class="classes">
+        <span v-if="dot" class="size-1.5 rounded-full" :class="dotColor[color]" />
+        <slot />
+    </span>
 </template>

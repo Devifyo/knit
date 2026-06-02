@@ -39,6 +39,12 @@ final class Rbac
             'notes.create',
             'notes.update',
             'notes.delete',
+            // CRM
+            'contacts.view', 'contacts.manage',
+            'companies.view', 'companies.manage',
+            'leads.view', 'leads.manage', 'leads.convert',
+            'deals.view', 'deals.manage',
+            'accounts.view', 'accounts.manage',
         ];
     }
 
@@ -59,9 +65,19 @@ final class Rbac
                 'members.view',
                 'settings.view',
                 'notes.view', 'notes.create', 'notes.update', 'notes.delete',
+                'contacts.view', 'contacts.manage',
+                'companies.view', 'companies.manage',
+                'leads.view', 'leads.manage', 'leads.convert',
+                'deals.view', 'deals.manage',
+                'accounts.view', 'accounts.manage',
             ],
             self::AGENT => [
                 'notes.view', 'notes.create',
+                'contacts.view', 'contacts.manage',
+                'companies.view',
+                'leads.view', 'leads.manage', 'leads.convert',
+                'deals.view', 'deals.manage',
+                'accounts.view',
             ],
         ];
     }

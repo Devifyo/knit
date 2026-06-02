@@ -12,3 +12,4 @@ export { default as Toast } from './Toast.vue';
 export { default as DataTable } from './DataTable.vue';
 export { default as Kanban } from './Kanban.vue';
 export { default as CommandPalette } from './CommandPalette.vue';
+export { default as EmptyState } from './EmptyState.vue';

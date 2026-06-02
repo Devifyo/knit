@@ -62,9 +62,9 @@ function onSelect(command) {
                                 v-slot="{ active }"
                                 as="template"
                             >
-                                <li :class="['flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm', active ? 'bg-brand-600 text-white' : 'text-gray-700']">
+                                <li :class="['flex cursor-pointer items-center justify-between rounded-[6px] px-3 py-2 text-sm', active ? 'bg-[var(--brand)] text-white' : 'text-ink-soft']">
                                     <span>{{ command.label }}</span>
-                                    <span v-if="command.group" :class="active ? 'text-white/70' : 'text-gray-400'" class="text-xs">{{ command.group }}</span>
+                                    <span v-if="command.group" :class="active ? 'text-white/70' : 'text-faint'" class="text-xs">{{ command.group }}</span>
                                 </li>
                             </ComboboxOption>
                         </ComboboxOptions>

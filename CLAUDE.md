@@ -150,5 +150,26 @@ parity). Config comes from `.env.testing` (loaded because `APP_ENV=testing`). Th
 PHP containers do **not** use Docker `env_file`; Laravel reads `.env` / `.env.testing`
 directly, so the test env isn't clobbered by container env vars.
 
-**Current status:** Phase 0 + Phase 1 complete (17 Pest tests green). Phase 2
-(Core CRM) is next and not yet started.
+## Design system (Phase 2)
+
+`docs/DESIGN.md` is the source of truth: **Geist** UI font + Geist Mono for
+numbers, near-monochrome **Zinc** palette, one white-label accent (`--brand`),
+hairline structure, soft tinted elevation, restrained motion. Tokens live in
+`resources/css/app.css` via Tailwind v4 `@theme` — use semantic utilities
+(`bg-canvas`, `text-ink`/`text-muted`, `border-hairline`, `shadow-e1`, `brand-wash`,
+`.nums` for money/metrics). The UI library in `resources/js/Components/ui` is the
+only place to build primitives; new screens compose those.
+
+## Domain models (Phase 2)
+
+Core CRM Eloquent models live in `app/Models` (one tightly-coupled graph): Company,
+Contact, Lead, Pipeline, Stage, Deal, Account, Activity, Tag, CustomFieldDefinition
+(+ Note, FieldPermission, Tenant, User). **Controllers/services/policies live in
+`app/Modules/<Module>`** (e.g. `App\Modules\Leads\Services\LeadConversionService`,
+`App\Modules\Deals\Http\Controllers\DealController`). Every tenant-owned model
+`implements TenantOwned` + `use BelongsToTenant`. Money = integer minor units +
+currency (`Deal::formattedAmount()`). Real-time: `DealStageChanged` →
+`tenant.{id}.pipeline.{pipelineId}`; `NoteCreated` → `tenant.{id}.notifications`.
+
+**Current status:** Phases 0–2 complete (23 Pest tests green). Phase 3 (Sales
+Automation) is next and not yet started.

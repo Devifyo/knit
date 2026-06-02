@@ -12,19 +12,19 @@ const props = defineProps({
 });
 
 const base =
-    'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+    'inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius-control)] transition-[background-color,box-shadow,transform] duration-150 ease-[var(--ease-out-soft)] focus:outline-none focus-visible:brand-ring active:translate-y-px disabled:opacity-45 disabled:pointer-events-none select-none';
 
 const variants = {
-    primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm',
-    secondary: 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm',
-    ghost: 'text-gray-700 hover:bg-gray-100',
-    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+    primary: 'bg-brand text-white hover:brightness-95 shadow-e1',
+    secondary: 'bg-surface text-ink-soft ring-1 ring-hairline ring-inset hover:bg-sunken',
+    ghost: 'text-ink-soft hover:bg-sunken',
+    danger: 'bg-critical text-white hover:brightness-95 shadow-e1',
 };
 
 const sizes = {
-    sm: 'text-xs px-2.5 py-1.5',
-    md: 'text-sm px-4 py-2',
-    lg: 'text-base px-5 py-2.5',
+    sm: 'h-[30px] px-3 text-xs',
+    md: 'h-9 px-4 text-sm',
+    lg: 'h-[42px] px-5 text-md',
 };
 
 const classes = computed(() => [base, variants[props.variant], sizes[props.size]]);

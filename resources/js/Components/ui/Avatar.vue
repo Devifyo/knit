@@ -7,10 +7,10 @@ const props = defineProps({
     size: { type: String, default: 'md' }, // sm | md | lg
 });
 
-const sizes = { sm: 'size-7 text-xs', md: 'size-9 text-sm', lg: 'size-12 text-base' };
+const sizes = { sm: 'size-6 text-[10px]', md: 'size-8 text-xs', lg: 'size-10 text-sm' };
 
 const initials = computed(() =>
-    props.name
+    (props.name || '?')
         .split(' ')
         .map((p) => p[0])
         .filter(Boolean)
@@ -23,7 +23,8 @@ const initials = computed(() =>
 <template>
     <span
         :class="[
-            'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-semibold text-brand-700',
+            'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold ring-1 ring-black/5',
+            'brand-wash text-[var(--brand)]',
             sizes[size],
         ]"
     >

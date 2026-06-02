@@ -1,33 +1,28 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const tabs = [
-    { label: 'General', href: '#' },
-    { label: 'Branding', href: '#' },
-    { label: 'Members & Roles', href: '#' },
-    { label: 'Custom Fields', href: '#' },
-    { label: 'Pipelines', href: '#' },
-    { label: 'Billing', href: '#' },
+    { label: 'Branding', href: '/settings/branding' },
+    { label: 'Members & Roles', href: '/members' },
 ];
 </script>
 
 <template>
-    <div class="mx-auto max-w-5xl">
-        <h1 class="mb-6 text-2xl font-semibold text-gray-900">Settings</h1>
+    <div>
+        <h1 class="mb-6 text-xl font-semibold tracking-[-0.02em] text-ink">Settings</h1>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-[200px_1fr]">
-            <nav class="space-y-1">
+            <nav class="space-y-0.5">
                 <Link
                     v-for="tab in tabs"
                     :key="tab.label"
                     :href="tab.href"
-                    class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    :class="['block rounded-[var(--radius-control)] px-3 py-2 text-[13px] font-medium transition-colors', page.url.startsWith(tab.href) ? 'brand-wash text-[var(--brand)]' : 'text-ink-soft hover:bg-sunken']"
                 >
                     {{ tab.label }}
                 </Link>
             </nav>
-            <div>
-                <slot />
-            </div>
+            <div><slot /></div>
         </div>
     </div>
 </template>

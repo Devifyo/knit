@@ -6,14 +6,16 @@ defineProps({
 </script>
 
 <template>
-    <div class="flex min-h-full items-center justify-center bg-gray-50 px-4 py-12">
-        <div class="w-full max-w-md">
-            <div class="mb-8 flex flex-col items-center gap-2">
-                <span class="grid size-11 place-items-center rounded-xl bg-brand-600 text-xl font-bold text-white">K</span>
-                <h1 v-if="title" class="text-xl font-semibold text-gray-900">{{ title }}</h1>
-                <p v-if="subtitle" class="text-sm text-gray-500">{{ subtitle }}</p>
+    <div class="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12">
+        <div class="w-full max-w-[400px]">
+            <div class="mb-8 flex flex-col items-center gap-3">
+                <span class="grid size-10 place-items-center rounded-xl text-lg font-bold text-white" :style="{ background: 'var(--brand)' }">K</span>
+                <div class="text-center">
+                    <h1 v-if="title" class="text-lg font-semibold tracking-[-0.02em] text-ink">{{ title }}</h1>
+                    <p v-if="subtitle" class="mt-1 text-sm text-muted">{{ subtitle }}</p>
+                </div>
             </div>
-            <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+            <div class="rounded-2xl border border-hairline bg-surface p-7 shadow-e1">
                 <slot />
             </div>
         </div>

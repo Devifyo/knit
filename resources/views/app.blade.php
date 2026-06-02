@@ -7,14 +7,15 @@
 
         <title inertia>{{ config('app.name', 'Knit') }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net" />
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>
-    <body class="h-full bg-gray-50 font-sans text-gray-900 antialiased">
+    <body class="h-full bg-canvas font-sans text-ink antialiased">
         @inertia
     </body>
 </html>

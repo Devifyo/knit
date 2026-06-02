@@ -37,17 +37,27 @@ Deferred to their phases (tables don't exist yet): default pipelines (Phase 2),
 ticket statuses (Phase 5), email templates (Phase 6). SSO/OAuth providers scaffolded
 behind Fortify but real provider wiring lands with the integrations work (Phase 10).
 
-## 🔜 Phase 2 — Core CRM (next)
+## ✅ Phase 2 — Core CRM
 
-Contacts, Companies, Leads, Pipelines/Stages, Deals (drag-drop kanban with live
-Reverb updates), Accounts (parent-child, health, contracts, renewals). Custom
-fields, tags/segmentation, polymorphic timeline, dedupe, global search, saved
-filters, bulk actions. See `DATA_MODEL.md`.
+Full core data model (Company, Contact, Lead, Pipeline/Stage, Deal, Account,
+Activity, Tag, CustomFieldDefinition) — all tenant-scoped via BelongsToTenant.
+Contacts (list + search + detail with polymorphic timeline + notes + email dedupe
++ custom fields), Companies (health), Leads (capture + scoring stub + **convert →
+contact + deal** via LeadConversionService), Deals (default pipeline + **drag-drop
+kanban with live Reverb sync** via DealStageChanged), Accounts (health + renewals),
+Dashboard KPIs. Premium design system (`docs/DESIGN.md`): Geist type, Zinc palette,
+white-label accent, rebuilt UI library + app shell.
 
-**Acceptance:** lead → qualify → convert into contact + deal; kanban move syncs to
-a second browser via Reverb; a custom field added in settings appears on forms.
+**Acceptance — all met (6 new Pest tests, 23 total):** lead → convert into contact
++ deal; kanban move persists + broadcasts `DealStageChanged`; a tenant custom field
+appears on the contacts screen; per-entity isolation + cross-tenant 404;
+duplicate-email rejection. Pint + PHPStan L6 green.
 
-## ⬜ Phase 3 — Sales Automation
+Deferred to later phases: product catalog / CPQ on deals (Phase 3); saved filters +
+bulk actions + global ⌘K search wiring (palette shell exists); multi-owner pivot +
+social enrichment hook (single owner_id for now).
+
+## 🔜 Phase 3 — Sales Automation (next)
 Workflow engine, tasks/reminders, calendar sync (Google/Outlook adapters), meeting
 scheduling, follow-up sequences/cadences. Quote/Proposal builder (templates,
 dynamic pricing, **PDF**, e-signature adapter, approvals). CPQ (product catalog,
