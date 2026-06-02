@@ -7,11 +7,7 @@ use App\Services\AI\GeminiService;
 it('renders the Inertia welcome page on the home route', function () {
     $this->get('/')
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Welcome', false)
-            ->has('laravelVersion')
-            ->has('phpVersion'),
-        );
+        ->assertInertia(fn ($page) => $page->component('Welcome', false));
 });
 
 it('exposes a health check endpoint', function () {

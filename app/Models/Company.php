@@ -57,6 +57,12 @@ class Company extends Model implements TenantOwned
         return $this->hasOne(Account::class);
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
     /** @return MorphToMany<Tag, $this> */
     public function tags(): MorphToMany
     {

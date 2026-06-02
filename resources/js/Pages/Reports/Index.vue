@@ -16,10 +16,20 @@ const f = reactive({
 const apply = () => router.get('/reports', f, { preserveState: true, replace: true });
 const exportUrl = (fmt) => '/reports/export/' + fmt + '?' + new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([, v]) => v))).toString();
 
-const columns = (headers) => headers.map((h, i) => ({ key: String(i), label: h, align: i >= 3 && h !== 'Status' ? 'right' : 'left' }));
+const numericHeaders = ['Amount', 'Score', 'Health', 'Contacts', 'Recipients'];
+const columns = (headers) => headers.map((h, i) => ({ key: String(i), label: h, align: numericHeaders.includes(h) ? 'right' : 'left' }));
 const tableRows = (rows) => rows.map((r, ri) => ({ id: ri, ...Object.fromEntries(r.map((c, i) => [String(i), c])) }));
 const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]';
-const statusOpts = { deals: ['', 'open', 'won', 'lost'], leads: ['', 'new', 'working', 'qualified', 'unqualified'] };
+const statusOpts = {
+    deals: ['', 'open', 'won', 'lost'],
+    leads: ['', 'new', 'working', 'qualified', 'unqualified'],
+    contacts: [''],
+    companies: [''],
+    tickets: ['', 'open', 'pending', 'resolved', 'closed'],
+    campaigns: ['', 'draft', 'sending', 'sent'],
+};
+// Owner filter only applies to entities that have an owner column.
+const ownerEntities = ['deals', 'leads', 'contacts', 'companies', 'tickets'];
 </script>
 
 <template>
@@ -41,11 +51,18 @@ const statusOpts = { deals: ['', 'open', 'won', 'lost'], leads: ['', 'new', 'wor
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <div>
                     <label class="mb-1.5 block text-xs font-medium text-muted">Report</label>
-                    <select v-model="f.entity" :class="selStyle" @change="f.status = ''"><option value="deals">Deals</option><option value="leads">Leads</option></select>
+                    <select v-model="f.entity" :class="selStyle" @change="f.status = ''">
+                        <option value="deals">Deals</option>
+                        <option value="leads">Leads</option>
+                        <option value="contacts">Contacts</option>
+                        <option value="companies">Companies</option>
+                        <option value="tickets">Tickets</option>
+                        <option value="campaigns">Campaigns</option>
+                    </select>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-xs font-medium text-muted">Owner</label>
-                    <select v-model="f.owner_id" :class="selStyle"><option value="">Anyone</option><option v-for="o in owners" :key="o.id" :value="o.id">{{ o.name }}</option></select>
+                    <select v-model="f.owner_id" :class="selStyle" :disabled="!ownerEntities.includes(f.entity)"><option value="">Anyone</option><option v-for="o in owners" :key="o.id" :value="o.id">{{ o.name }}</option></select>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-xs font-medium text-muted">Status</label>
