@@ -26,6 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
         CheckTicketSla::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a TLS-terminating reverse proxy (knit.devifyo.cloud) — trust it
+        // so HTTPS/host detection uses the X-Forwarded-* headers.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO);
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
