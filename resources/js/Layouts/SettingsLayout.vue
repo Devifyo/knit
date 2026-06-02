@@ -5,6 +5,8 @@ const page = usePage();
 const tabs = [
     { label: 'Branding', href: '/settings/branding' },
     { label: 'Members & Roles', href: '/members' },
+    { label: 'Billing', href: '/settings/billing' },
+    { label: 'Developer', href: '/settings/webhooks' },
 ];
 </script>
 

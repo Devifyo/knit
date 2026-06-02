@@ -239,5 +239,36 @@ Toggle AI per workspace in Settings → branding.
 deals/leads reports; `ReportController@export` streams CSV, Excel (`ArrayReportExport`
 via maatwebsite), or PDF (`pdf.report` via dompdf).
 
-**Current status:** Phases 0–8 complete (59 Pest tests green). Phase 9
-(Collaboration & Projects) is next and not yet started.
+## Collaboration & Projects (Phase 9)
+
+`App\Modules\Projects`: `Project` (HasMedia — file attachments) + `ProjectTask`
+(self-referencing `parent_id` subtasks; todo/doing/done kanban) + `TimeEntry`
+(rolls up to task + project totals). Projects link into the CRM graph the way
+popular CRMs do — a delivery project hangs off a (won) `Deal` and inherits its
+`company_id`/`contact_id`; the deal page lists its projects and a "Start project"
+spins one up. Files download via a tenant-guarded stream route (no `storage:link`).
+`App\Modules\Analytics\ActivityFeedController` renders a workspace-wide activity
+feed. Nav group "Collaborate" (Projects, Activity feed).
+
+## Billing & Integrations (Phase 10)
+
+`App\Modules\Billing`: global catalogue (`Plan`, `Coupon`) + tenant-owned
+`Subscription`/`Invoice`/`InvoiceItem`/`Payment` (money = integer minor units).
+`BillingService` runs the lifecycle (trial, subscribe → generate invoice → settle)
+through a `PaymentGateway` adapter — `ManualPaymentGateway` is the default working
+driver; `StripePaymentGateway` is config-swappable (`BILLING_GATEWAY=stripe`).
+`Entitlements` resolves the active plan and **enforces gating** (seat limit blocks
+`MemberController@invite`; feature flags exposed). Invoice PDF via dompdf
+(`pdf.invoice`). `App\Modules\Integrations`: outbound **signed webhooks** —
+`WebhookEndpoint` (tenant-registered, event subscriptions) + `WebhookDelivery`
+(log). `WebhookDispatcher` fans `contact.created`/`lead.created`/`deal.created`
+(fired in `AppServiceProvider`) to subscribed endpoints; `DeliverWebhookJob`
+(queued, tenant-aware) POSTs the payload with an `X-Knit-Signature` HMAC and
+records the outcome. Settings tabs: Billing, Developer (webhooks).
+
+**Deferred to a later integrations pass:** live Stripe/Razorpay keys (adapter is
+ready), specific OAuth providers (Gmail/Slack/Zoom/Shopify/QuickBooks/Xero),
+GraphQL, public REST + SDK, Zapier app.
+
+**Current status:** Phases 0–10 complete (79 Pest tests green). Phase 11
+(Security, Compliance & UX Polish) is next and not yet started.

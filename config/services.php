@@ -43,4 +43,9 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
     ],
 
+    'billing' => [
+        'gateway' => env('BILLING_GATEWAY', 'manual'), // manual | stripe
+        'stripe_secret' => env('STRIPE_SECRET'),
+    ],
+
 ];

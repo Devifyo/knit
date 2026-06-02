@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Modules\Admin\Services\Rbac;
+use App\Modules\Billing\Services\Entitlements;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -55,6 +56,13 @@ class MemberController extends Controller
 
         if (User::where('tenant_id', tenant('id'))->where('email', $data['email'])->exists()) {
             return back()->withErrors(['email' => 'That person is already a member.']);
+        }
+
+        // Plan gating — block inviting beyond the subscription's seat limit.
+        if (! app(Entitlements::class)->canAddSeat()) {
+            $limit = app(Entitlements::class)->seatLimit();
+
+            return back()->withErrors(['email' => "Your plan includes {$limit} seats. Upgrade in Billing to add more."]);
         }
 
         Invitation::updateOrCreate(

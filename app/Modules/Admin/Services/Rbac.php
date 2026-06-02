@@ -59,6 +59,9 @@ final class Rbac
             'analytics.view', 'reports.export',
             // Collaboration & projects
             'projects.view', 'projects.manage',
+            // Billing & integrations (account-level — Owner/Admin only)
+            'billing.view', 'billing.manage',
+            'integrations.view', 'integrations.manage',
         ];
     }
 

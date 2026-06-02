@@ -16,14 +16,17 @@ use App\Models\KbArticle;
 use App\Models\Lead;
 use App\Models\Note;
 use App\Models\Pipeline;
+use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Project;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\WebhookEndpoint;
 use App\Models\Workflow;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
+use App\Modules\Billing\Services\BillingService;
 use App\Modules\Communication\Services\InboundEmailService;
 use App\Modules\Support\Channels\EmailChannelAdapter;
 use App\Modules\Support\Services\TicketIntakeService;
@@ -39,6 +42,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Global billing catalogue (plans + coupons) shared by all tenants.
+        $this->call(BillingSeeder::class);
+
         $provisioner = app(WorkspaceProvisioner::class);
 
         $acme = $provisioner->provision([
@@ -226,6 +232,18 @@ class DatabaseSeeder extends Seeder
                     ]);
                 }
             }
+
+            // Phase 10 — an active paid subscription + its invoice, and a sample
+            // webhook endpoint so Billing and Developer settings look real.
+            $billing = app(BillingService::class);
+            $billing->subscribe(Plan::where('key', 'pro')->first());
+
+            WebhookEndpoint::create([
+                'url' => 'https://example.com/hooks/'.$tenant->slug,
+                'secret' => 'whsec_'.Str::random(40),
+                'events' => ['contact.created', 'deal.created'],
+                'created_by' => $owner->id,
+            ]);
 
             tenancy()->end();
         }

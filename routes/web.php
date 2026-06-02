@@ -13,6 +13,8 @@ use App\Modules\Analytics\Http\Controllers\DashboardController;
 use App\Modules\Analytics\Http\Controllers\ReportController;
 use App\Modules\Automation\Http\Controllers\TaskController;
 use App\Modules\Automation\Http\Controllers\WorkflowController;
+use App\Modules\Billing\Http\Controllers\BillingController;
+use App\Modules\Billing\Http\Controllers\InvoiceController;
 use App\Modules\Communication\Http\Controllers\ChatController;
 use App\Modules\Communication\Http\Controllers\InboundWebhookController;
 use App\Modules\Communication\Http\Controllers\InboxController;
@@ -20,6 +22,7 @@ use App\Modules\Contacts\Http\Controllers\CompanyController;
 use App\Modules\Contacts\Http\Controllers\ContactController;
 use App\Modules\Deals\Http\Controllers\DealController;
 use App\Modules\Deals\Http\Controllers\QuoteController;
+use App\Modules\Integrations\Http\Controllers\WebhookEndpointController;
 use App\Modules\Leads\Http\Controllers\LeadCaptureController;
 use App\Modules\Leads\Http\Controllers\LeadController;
 use App\Modules\Marketing\Http\Controllers\CampaignController;
@@ -206,6 +209,20 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::delete('/invitations/{invitation}', [MemberController::class, 'revokeInvite'])->middleware('permission:members.invite')->name('invitations.revoke');
     Route::get('/settings/branding', [BrandingController::class, 'edit'])->name('settings.branding');
     Route::put('/settings/branding', [BrandingController::class, 'update'])->middleware('permission:branding.update')->name('settings.branding.update');
+
+    // Billing & subscriptions (account-level)
+    Route::get('/settings/billing', [BillingController::class, 'index'])->middleware('permission:billing.view')->name('billing.index');
+    Route::get('/settings/billing/invoices/{invoice}/pdf', [InvoiceController::class, 'download'])->middleware('permission:billing.view')->name('billing.invoices.pdf');
+    Route::post('/settings/billing/subscribe', [BillingController::class, 'subscribe'])->middleware('permission:billing.manage')->name('billing.subscribe');
+    Route::post('/settings/billing/cancel', [BillingController::class, 'cancel'])->middleware('permission:billing.manage')->name('billing.cancel');
+
+    // Integrations — outbound webhooks (developer platform)
+    Route::get('/settings/webhooks', [WebhookEndpointController::class, 'index'])->middleware('permission:integrations.view')->name('webhooks.index');
+    Route::middleware('permission:integrations.manage')->group(function () {
+        Route::post('/settings/webhooks', [WebhookEndpointController::class, 'store'])->name('webhooks.store');
+        Route::delete('/settings/webhooks/{endpoint}', [WebhookEndpointController::class, 'destroy'])->name('webhooks.destroy');
+        Route::post('/settings/webhooks/{endpoint}/ping', [WebhookEndpointController::class, 'ping'])->name('webhooks.ping');
+    });
 
     Route::get('/current-workspace', fn () => response()->json([
         'tenant_id' => tenant('id'),

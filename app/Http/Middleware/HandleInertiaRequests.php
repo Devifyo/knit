@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -59,6 +60,21 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'ai' => fn () => $request->session()->get('ai'),
             ],
+
+            // Lightweight billing banner state (trial countdown / current plan).
+            // Only resolved when a tenant + user are present.
+            'billing' => function () use ($request) {
+                if (! $request->user() || ! function_exists('tenant') || tenant() === null) {
+                    return null;
+                }
+                $sub = Subscription::with('plan')->latest()->first();
+
+                return [
+                    'plan' => $sub?->plan?->name,
+                    'on_trial' => (bool) $sub?->onTrial(),
+                    'trial_ends_at' => $sub?->trial_ends_at?->toFormattedDateString(),
+                ];
+            },
         ];
     }
 }
