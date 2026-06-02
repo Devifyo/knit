@@ -218,5 +218,17 @@ sequence (use trigger `manual` for nurture-only workflows to avoid double-firing
 with `lead.created`). SMS/WhatsApp via the `MessagingChannel` adapter
 (`LogMessagingChannel` stub).
 
-**Current status:** Phases 0–6 complete (53 Pest tests green). Phase 7 (AI Layer)
-is next and not yet started.
+## AI layer (Phase 7)
+
+`App\Services\AI\GeminiService` is the ONLY place that talks to Gemini (REST,
+`gemini-2.5-flash`). `run()` wraps every method: cache by content hash → tenant
+toggle gate (`enabledForCurrentTenant()` reads `Tenant.ai_enabled`) → `callGemini()`
+(JSON mode for structured results) → parse → audit to `ai_outputs` → graceful
+fallback on any failure/429. Wired: `LeadController@score`,
+`App\Modules\AI\Http\Controllers\MeetingController@summarize` (transcript → meeting
+Activity + linked Tasks), `TicketController@assist`, `DealController@insight`.
+AI-assist results flash via `session('ai')` (shared in HandleInertiaRequests).
+Toggle AI per workspace in Settings → branding.
+
+**Current status:** Phases 0–7 complete (56 Pest tests green; AI verified live).
+Phase 8 (Analytics & Reporting) is next and not yet started.

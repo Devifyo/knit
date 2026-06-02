@@ -1,11 +1,16 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Card, Avatar, Tag, Button, Input } from '@/Components/ui';
+import { Card, Avatar, Tag, Button, Input, Modal } from '@/Components/ui';
 
 const props = defineProps({ contact: Object, customFields: Array });
 
 const note = useForm({ body: '' });
 const addNote = () => note.post(`/contacts/${props.contact.id}/notes`, { preserveScroll: true, onSuccess: () => note.reset() });
+
+const meetingOpen = ref(false);
+const meeting = useForm({ transcript: '' });
+const summarize = () => meeting.post(`/contacts/${props.contact.id}/meeting`, { onSuccess: () => { meetingOpen.value = false; meeting.reset(); } });
 
 const fieldLabel = (key) => props.customFields.find((f) => f.key === key)?.label ?? key;
 const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'warning', task: 'positive', system: 'neutral' };
@@ -61,6 +66,7 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
 
             <!-- Timeline -->
             <Card title="Timeline" subtitle="Notes, calls, emails and system events">
+                <template #header><Button size="sm" variant="secondary" @click="meetingOpen = true">Summarize meeting (AI)</Button></template>
                 <form class="mb-5 flex items-start gap-2" @submit.prevent="addNote">
                     <div class="flex-1"><Input v-model="note.body" placeholder="Add a note…" /></div>
                     <Button :loading="note.processing" @click="addNote">Add</Button>
@@ -79,5 +85,14 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
             </Card>
             </div>
         </div>
+
+        <Modal :open="meetingOpen" title="Summarize meeting with AI" @close="meetingOpen = false">
+            <p class="mb-4 text-sm text-muted">Paste a call/meeting transcript. AI writes a summary onto the timeline and turns action items into linked tasks.</p>
+            <textarea v-model="meeting.transcript" rows="8" placeholder="Paste transcript…" class="w-full rounded-[var(--radius-control)] bg-surface p-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]" />
+            <template #footer>
+                <Button variant="secondary" @click="meetingOpen = false">Cancel</Button>
+                <Button :loading="meeting.processing" @click="summarize">Summarize</Button>
+            </template>
+        </Modal>
     </div>
 </template>

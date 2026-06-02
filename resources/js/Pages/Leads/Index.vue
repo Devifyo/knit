@@ -14,6 +14,7 @@ const form = useForm({ name: '', email: '', phone: '', source: '' });
 const submit = () => form.post('/leads', { preserveScroll: true, onSuccess: () => { open.value = false; form.reset(); } });
 
 const convert = (id) => router.post(`/leads/${id}/convert`);
+const scoreAi = (id) => router.post(`/leads/${id}/score`, {}, { preserveScroll: true });
 
 const columns = [
     { key: 'name', label: 'Lead', sortable: true },
@@ -53,7 +54,10 @@ const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'posit
                 <Tag v-else size="sm" :color="statusColor(row.status)">{{ row.status }}</Tag>
             </template>
             <template #cell:actions="{ row }">
-                <Button v-if="!row.converted && can('leads.convert')" variant="secondary" size="sm" @click="convert(row.id)">Convert</Button>
+                <div class="flex items-center justify-end gap-1.5">
+                    <Button v-if="can('leads.manage')" variant="ghost" size="sm" @click="scoreAi(row.id)">Score with AI</Button>
+                    <Button v-if="!row.converted && can('leads.convert')" variant="secondary" size="sm" @click="convert(row.id)">Convert</Button>
+                </div>
             </template>
         </DataTable>
 

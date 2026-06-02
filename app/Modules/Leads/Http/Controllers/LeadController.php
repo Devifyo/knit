@@ -7,6 +7,7 @@ namespace App\Modules\Leads\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Modules\Leads\Services\LeadConversionService;
+use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,19 @@ use Inertia\Response;
 
 class LeadController extends Controller
 {
+    /** AI lead scoring — updates the lead's score + reasons from real lead data. */
+    public function score(Lead $lead, GeminiService $ai): RedirectResponse
+    {
+        $result = $ai->scoreLead($lead);
+
+        $lead->forceFill([
+            'score' => $result['score'],
+            'custom_fields' => [...($lead->custom_fields ?? []), 'ai_reasons' => $result['reasons']],
+        ])->save();
+
+        return back()->with('success', "AI scored this lead {$result['score']}/100.");
+    }
+
     public function index(Request $request): Response
     {
         $leads = Lead::with('assignee:id,name')

@@ -7,6 +7,7 @@ use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
 use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
+use App\Modules\AI\Http\Controllers\MeetingController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
 use App\Modules\Automation\Http\Controllers\TaskController;
 use App\Modules\Automation\Http\Controllers\WorkflowController;
@@ -32,7 +33,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'phase' => 'Phase 6 — Marketing Automation',
+        'phase' => 'Phase 7 — AI Layer (Gemini)',
         'laravelVersion' => app()->version(),
         'phpVersion' => PHP_VERSION,
     ]);
@@ -71,6 +72,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::middleware('permission:contacts.manage')->group(function () {
         Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
         Route::post('/contacts/{contact}/notes', [ContactController::class, 'addNote'])->name('contacts.notes');
+        Route::post('/contacts/{contact}/meeting', [MeetingController::class, 'summarize'])->name('contacts.meeting');
     });
 
     // Companies
@@ -81,12 +83,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/leads', [LeadController::class, 'index'])->middleware('permission:leads.view')->name('leads.index');
     Route::post('/leads', [LeadController::class, 'store'])->middleware('permission:leads.manage')->name('leads.store');
     Route::post('/leads/{lead}/convert', [LeadController::class, 'convert'])->middleware('permission:leads.convert')->name('leads.convert');
+    Route::post('/leads/{lead}/score', [LeadController::class, 'score'])->middleware('permission:leads.manage')->name('leads.score');
 
     // Deals
     Route::get('/deals', [DealController::class, 'index'])->middleware('permission:deals.view')->name('deals.index');
     Route::get('/deals/{deal}', [DealController::class, 'show'])->middleware('permission:deals.view')->name('deals.show');
     Route::post('/deals', [DealController::class, 'store'])->middleware('permission:deals.manage')->name('deals.store');
     Route::patch('/deals/{deal}/move', [DealController::class, 'move'])->middleware('permission:deals.manage')->name('deals.move');
+    Route::post('/deals/{deal}/insight', [DealController::class, 'insight'])->middleware('permission:deals.view')->name('deals.insight');
     Route::post('/deals/{deal}/products', [DealController::class, 'addProduct'])->middleware('permission:deals.manage')->name('deals.products.add');
     Route::delete('/deals/{deal}/products/{pivotId}', [DealController::class, 'removeProduct'])->middleware('permission:deals.manage')->name('deals.products.remove');
 
@@ -117,6 +121,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     });
     Route::middleware('permission:tickets.manage')->group(function () {
         Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+        Route::post('/tickets/{ticket}/assist', [TicketController::class, 'assist'])->name('tickets.assist');
         Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::post('/tickets/simulate', [TicketController::class, 'simulate'])->name('tickets.simulate');
     });

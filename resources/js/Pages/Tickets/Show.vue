@@ -1,9 +1,12 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Card, Tag, Button } from '@/Components/ui';
 
 const props = defineProps({ ticket: Object, members: Array });
+const page = usePage();
+const ai = computed(() => page.props.flash?.ai);
+const assist = () => router.post(`/tickets/${props.ticket.id}/assist`, {}, { preserveScroll: true });
 
 const form = useForm({ body: '', internal: false });
 const send = () => form.post(`/tickets/${props.ticket.id}/reply`, { preserveScroll: true, onSuccess: () => form.reset() });
@@ -75,6 +78,21 @@ const prioColor = (p) => ({ urgent: 'critical', high: 'warning', normal: 'info',
                     <div class="flex justify-between"><dt class="text-muted">Status</dt><dd><Tag size="sm">{{ ticket.status }}</Tag></dd></div>
                     <div v-if="ticket.escalated" class="rounded-lg bg-critical/10 px-2.5 py-1.5 text-xs text-critical">Escalated for SLA breach.</div>
                 </dl>
+            </Card>
+
+            <Card title="AI assist">
+                <Button size="sm" variant="secondary" class="w-full" @click="assist">Summarize &amp; suggest reply</Button>
+                <div v-if="ai" class="mt-3 space-y-3 text-sm">
+                    <div v-if="ai.summary">
+                        <p class="mb-1 text-xs font-medium text-muted">Summary</p>
+                        <p class="text-ink-soft">{{ ai.summary }}</p>
+                    </div>
+                    <div v-if="ai.replies && ai.replies.length">
+                        <p class="mb-1 text-xs font-medium text-muted">Suggested replies</p>
+                        <button v-for="(r, i) in ai.replies" :key="i" class="mb-1.5 block w-full rounded-lg bg-sunken p-2 text-left text-xs text-ink-soft hover:bg-hairline" @click="form.body = r">{{ r }}</button>
+                    </div>
+                    <p v-if="!ai.summary && !(ai.replies && ai.replies.length)" class="text-xs text-muted">AI is off for this workspace, or no suggestion available.</p>
+                </div>
             </Card>
         </div>
     </div>

@@ -21,6 +21,7 @@ class BrandingController extends Controller
                 'name' => $tenant->name,
                 'brand_color' => $tenant->brand_color,
                 'logo_url' => $tenant->logo_path ? "/storage/{$tenant->logo_path}" : null,
+                'ai_enabled' => (bool) $tenant->ai_enabled,
             ],
         ]);
     }
@@ -31,11 +32,13 @@ class BrandingController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'brand_color' => ['required', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'ai_enabled' => ['boolean'],
         ]);
 
         $tenant = tenant();
         $tenant->name = $data['name'];
         $tenant->brand_color = $data['brand_color'];
+        $tenant->ai_enabled = $data['ai_enabled'] ?? false;
 
         if ($request->hasFile('logo')) {
             $tenant->logo_path = $request->file('logo')->store('branding', 'public');
@@ -43,6 +46,6 @@ class BrandingController extends Controller
 
         $tenant->save();
 
-        return back()->with('success', 'Branding updated.');
+        return back()->with('success', 'Settings updated.');
     }
 }

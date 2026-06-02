@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Modules\Support\Channels\EmailChannelAdapter;
 use App\Modules\Support\Services\TicketIntakeService;
+use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -119,6 +120,15 @@ class TicketController extends Controller
         $ticket->save();
 
         return back()->with('success', 'Ticket updated.');
+    }
+
+    /** AI assist: summarize the ticket + suggest reply drafts (flashed to the view). */
+    public function assist(Ticket $ticket, GeminiService $ai): RedirectResponse
+    {
+        return back()->with('ai', [
+            'summary' => $ai->summarizeTicket($ticket),
+            'replies' => $ai->suggestReply($ticket),
+        ]);
     }
 
     /** Dev helper: simulate an inbound support email (creates + routes a ticket). */

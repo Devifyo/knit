@@ -124,13 +124,22 @@ lead is created and **enters a nurture sequence automatically**; a campaign send
 records recipients and **opens/clicks show in analytics** (verified live: send →
 Horizon drained the queue → 18 recipients). Pint + PHPStan L6 green.
 
-## 🔜 Phase 7 — AI Layer (next)
-Wire every `GeminiService` method to real features: lead scoring, recommendations,
-next-best-action, deal-risk, forecasting; ticket summaries/replies/sentiment; AI
-content; predictive analytics, churn, health scoring. Caching, queueing,
-rate-limit handling, per-tenant AI toggle enforced.
+## ✅ Phase 7 — AI Layer (Gemini)
+`GeminiService` now has the **real Gemini REST transport** (gemini-2.5-flash): all
+13 methods build prompts (JSON-mode for structured ones), cache by content hash,
+**persist to `ai_outputs`** for audit, and **degrade gracefully** on failure/429.
+**Per-tenant toggle** (`Tenant.ai_enabled`, editable in Settings) gates every call.
+Wired to features: **lead scoring** (updates `Lead.score` + reasons), **meeting
+transcript → summary activity + linked tasks**, ticket **summarize + suggest reply**,
+deal **next-best-action + risk**; churn/health/forecast/sentiment available on the
+service. No raw Gemini HTTP exists outside `GeminiService`.
 
-## ⬜ Phase 8 — Analytics & Reporting
+**Acceptance — met (3 new Pest tests, 56 total) + verified LIVE with real Gemini:**
+a lead scored **92/100** with contextual reasons; a meeting transcript produced a
+timeline summary + **3 extracted tasks**; `ai_outputs` logged each call. Pint +
+PHPStan L6 green.
+
+## 🔜 Phase 8 — Analytics & Reporting (next)
 Real-time role-based dashboards (Reverb), KPI widgets, custom report builder;
 sales/marketing/support analytics; export CSV/Excel/PDF.
 

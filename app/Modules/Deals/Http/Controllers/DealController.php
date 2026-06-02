@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Stage;
 use App\Modules\Deals\Services\PricingService;
+use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -129,6 +130,15 @@ class DealController extends Controller
             'pipeline' => $pipeline ? ['id' => $pipeline->id, 'name' => $pipeline->name] : null,
             'pipelines' => Pipeline::where('type', 'deal')->get(['id', 'name']),
             'columns' => $columns,
+        ]);
+    }
+
+    /** AI insight: next-best action + deal risk (flashed to the view). */
+    public function insight(Deal $deal, GeminiService $ai): RedirectResponse
+    {
+        return back()->with('ai', [
+            'next' => $ai->recommendNextAction($deal),
+            'risk' => $ai->predictDealRisk($deal),
         ]);
     }
 

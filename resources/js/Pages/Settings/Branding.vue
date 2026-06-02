@@ -10,6 +10,7 @@ const form = useForm({
     _method: 'put',
     name: props.branding.name,
     brand_color: props.branding.brand_color,
+    ai_enabled: props.branding.ai_enabled,
     logo: null,
 });
 
@@ -39,8 +40,13 @@ const submit = () => form.post('/settings/branding', { preserveScroll: true, for
                 <p v-if="form.errors.logo" class="mt-1 text-xs text-red-600">{{ form.errors.logo }}</p>
             </div>
 
+            <label class="flex items-center gap-2 border-t border-hairline-soft pt-4 text-sm text-ink-soft">
+                <input v-model="form.ai_enabled" type="checkbox" class="rounded border-hairline text-[var(--brand)]" />
+                Enable AI features (Gemini) for this workspace
+            </label>
+
             <div class="flex items-center gap-3">
-                <Button type="submit" :loading="form.processing">Save branding</Button>
+                <Button type="submit" :loading="form.processing">Save settings</Button>
                 <span class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white" :style="{ background: form.brand_color }">
                     Live preview
                 </span>
