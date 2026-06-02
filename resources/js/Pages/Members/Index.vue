@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import SettingsLayout from '@/Layouts/SettingsLayout.vue';
 import { Card, DataTable, Tag, Avatar, Button, Input, Modal } from '@/Components/ui';
 
+defineOptions({ layout: SettingsLayout });
 const props = defineProps({ members: Array, invitations: Array, roles: Array, canInvite: Boolean });
 
 const open = ref(false);
