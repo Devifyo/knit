@@ -176,27 +176,35 @@ const positionGuideHint = () => {
     guideHintArrowStyle.value = { top: `${Math.round(Math.max(14, Math.min(linkCenter - top, cardH - 14)))}px` };
 };
 
+const stopTrackingGuideHint = () => {
+    window.removeEventListener('resize', positionGuideHint);
+    window.removeEventListener('scroll', positionGuideHint, true);
+};
+
 const dismissGuideHint = () => {
     if (!guideHint.value) return;
     guideHint.value = false;
     try { localStorage.setItem(guideHintKey.value, '1'); } catch { /* ignore */ }
-    window.removeEventListener('resize', positionGuideHint);
+    stopTrackingGuideHint();
 };
 
 onMounted(() => {
     if (!user.value || page.url.startsWith('/guide')) return;
     try { if (localStorage.getItem(guideHintKey.value) === '1') return; } catch { return; }
     nextTick(() => setTimeout(() => {
-        if (!document.querySelector('[data-nav="/guide"]')) return;
+        const el = document.querySelector('[data-nav="/guide"]');
+        if (!el) return;
+        el.scrollIntoView({ block: 'nearest' }); // ensure the link is visible before pointing at it
         guideHint.value = true;
         nextTick(positionGuideHint); // measure the rendered card, then place it
         window.addEventListener('resize', positionGuideHint);
+        window.addEventListener('scroll', positionGuideHint, true); // follow nav/page scroll
     }, 650));
 });
 
 // Visiting the guide (by any route) counts as discovering it.
 watch(() => page.url, (url) => { if (url.startsWith('/guide')) dismissGuideHint(); });
-onBeforeUnmount(() => window.removeEventListener('resize', positionGuideHint));
+onBeforeUnmount(stopTrackingGuideHint);
 </script>
 
 <template>
