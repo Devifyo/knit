@@ -158,7 +158,7 @@ const chevron = icon('M6 9l6 6 6-6');
 <template>
     <div class="flex min-h-[100dvh] bg-canvas">
         <!-- Sidebar -->
-        <aside class="hidden w-[256px] shrink-0 flex-col border-r border-hairline bg-surface lg:flex">
+        <aside class="hidden w-[256px] shrink-0 flex-col border-r border-hairline bg-surface lg:flex lg:sticky lg:top-0 lg:h-[100dvh]">
             <!-- Workspace identity -->
             <div class="flex h-[60px] items-center gap-2.5 px-4">
                 <img v-if="branding.logo" :src="branding.logo" alt="" class="size-8 rounded-lg object-cover ring-1 ring-hairline" />
