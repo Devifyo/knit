@@ -27,10 +27,10 @@ onUnmounted(() => timer && clearInterval(timer));
     <div class="rounded-2xl border border-hairline bg-surface p-3.5 shadow-e2">
         <div class="mb-3 flex items-center justify-between px-0.5">
             <p class="text-[12px] font-semibold tracking-[-0.01em] text-ink">Sales Pipeline</p>
-            <span class="text-[11px] text-muted">Open <span class="nums font-medium text-ink-soft">{{ fmt(openValue) }}</span></span>
+            <span class="text-[11px] text-muted">Open <span class="nums inline-block w-[3.25rem] text-right font-medium text-ink-soft">{{ fmt(openValue) }}</span></span>
         </div>
-        <div class="grid grid-cols-3 gap-2">
-            <div v-for="(label, s) in stages" :key="label" class="rounded-xl bg-sunken/60 p-1.5">
+        <div class="grid h-[188px] grid-cols-3 gap-2">
+            <div v-for="(label, s) in stages" :key="label" class="overflow-hidden rounded-xl bg-sunken/60 p-1.5">
                 <div class="mb-1.5 flex items-center justify-between px-1 text-[8px] font-semibold uppercase tracking-wide text-faint">
                     {{ label }} <span class="rounded-full bg-surface px-1 ring-1 ring-hairline">{{ inStage(s).length }}</span>
                 </div>
