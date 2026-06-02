@@ -1,9 +1,17 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { Card, Avatar, Tag, Button, Input, Modal } from '@/Components/ui';
+import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({ contact: Object, customFields: Array });
+const { can } = usePermissions();
+
+const erase = () => {
+    if (confirm('Anonymize this contact? This permanently removes their personal data and cannot be undone.')) {
+        router.post(`/contacts/${props.contact.id}/erase`, {}, { preserveScroll: true });
+    }
+};
 
 const note = useForm({ body: '' });
 const addNote = () => note.post(`/contacts/${props.contact.id}/notes`, { preserveScroll: true, onSuccess: () => note.reset() });
@@ -43,6 +51,15 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
                             <dt class="text-muted">{{ fieldLabel(key) }}</dt><dd class="text-ink-soft">{{ val || '—' }}</dd>
                         </div>
                     </dl>
+                </Card>
+
+                <!-- GDPR data-subject tooling -->
+                <Card v-if="can('compliance.manage')" title="Data & privacy">
+                    <p class="text-xs text-muted">Export this contact's data or anonymize it (right to erasure).</p>
+                    <div class="mt-3 flex gap-2">
+                        <Button variant="secondary" size="sm" :href="`/contacts/${contact.id}/export`">Export JSON</Button>
+                        <Button variant="ghost" size="sm" class="text-critical" @click="erase">Erase</Button>
+                    </div>
                 </Card>
             </div>
 

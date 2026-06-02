@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Lead extends Model implements TenantOwned
+class Lead extends Model implements AuditableContract, TenantOwned
 {
     /** @use HasFactory<LeadFactory> */
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use Auditable, BelongsToTenant, HasFactory, SoftDeletes;
 
     /** @var list<string> */
     protected $fillable = [

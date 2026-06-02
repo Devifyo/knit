@@ -56,9 +56,33 @@
     --brand-contrast: #ffffff;
 }
 
-/* A tinted wash of the active brand — selected rows, active nav, brand badges. */
+/*
+ | Dark mode — overrides the semantic neutral tokens under `html.dark`.
+ | All `bg-canvas`/`text-ink`/`border-hairline`/etc. utilities reference these
+ | CSS vars at runtime, so the whole UI re-themes from this one block.
+ */
+.dark {
+    --color-canvas: #09090b;
+    --color-surface: #18181b;
+    --color-sunken: #27272a;
+    --color-ink: #fafafa;
+    --color-ink-soft: #e4e4e7;
+    --color-muted: #a1a1aa;
+    --color-faint: #71717a;
+    --color-hairline: #2a2a30;
+    --color-hairline-soft: #1f1f24;
+
+    --shadow-e1: 0 1px 2px rgb(0 0 0 / 0.40), 0 1px 3px rgb(0 0 0 / 0.30);
+    --shadow-e2: 0 4px 12px rgb(0 0 0 / 0.45), 0 2px 4px rgb(0 0 0 / 0.30);
+    --shadow-e3: 0 16px 48px rgb(0 0 0 / 0.60);
+
+    color-scheme: dark;
+}
+
+/* A tinted wash of the active brand — selected rows, active nav, brand badges.
+   Mixes over the current surface so it adapts to light/dark. */
 @utility brand-wash {
-    background-color: color-mix(in srgb, var(--brand) 10%, white);
+    background-color: color-mix(in srgb, var(--brand) 14%, var(--color-surface));
 }
 @utility brand-ring {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);

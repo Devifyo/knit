@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, watch, h } from 'vue';
+import { computed, onMounted, ref, watch, h } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { Avatar, Toast, CommandPalette, Dropdown, DropdownItem } from '@/Components/ui';
 import { useTenant } from '@/Composables/useTenant';
@@ -53,6 +53,8 @@ const icons = {
     feed: icon('M4 4h16M4 9h10M4 14h16M4 19h10'),
     billing: icon('M2 7h20M2 7v10a2 2 0 002 2h16a2 2 0 002-2V7M2 7l2-3h16l2 3M6 15h4'),
     developer: icon('M8 9l-3 3 3 3M16 9l3 3-3 3M13 5l-2 14'),
+    security: icon('M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4zM9 12l2 2 4-4'),
+    audit: icon('M9 12h6M9 16h6M9 8h2M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -91,6 +93,8 @@ const groups = [
     { label: 'Workspace', items: [
         { label: 'Members', href: '/members', icon: 'members' },
         { label: 'Billing', href: '/settings/billing', icon: 'billing' },
+        { label: 'Security', href: '/settings/security', icon: 'security' },
+        { label: 'Audit log', href: '/settings/audit', icon: 'audit' },
         { label: 'Developer', href: '/settings/webhooks', icon: 'developer' },
         { label: 'Settings', href: '/settings/branding', icon: 'settings' },
     ] },
@@ -98,6 +102,17 @@ const groups = [
 
 const commands = groups.flatMap((g) => g.items).map((n, i) => ({ id: i, label: n.label, href: n.href, group: 'Go to' }));
 const logout = () => router.post('/logout');
+
+// Dark mode — persisted to localStorage, applied to <html> (init script in app.blade).
+const isDark = ref(false);
+onMounted(() => { isDark.value = document.documentElement.classList.contains('dark'); });
+const toggleTheme = () => {
+    isDark.value = !isDark.value;
+    document.documentElement.classList.toggle('dark', isDark.value);
+    localStorage.setItem('knit-theme', isDark.value ? 'dark' : 'light');
+};
+const sun = icon('M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z');
+const moon = icon('M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z');
 const isActive = (href) => page.url === href || (href !== '/dashboard' && page.url.startsWith(href));
 </script>
 
@@ -140,6 +155,13 @@ const isActive = (href) => page.url === href || (href !== '/dashboard' && page.u
                     <h1 class="text-sm font-semibold tracking-[-0.01em] text-ink">{{ $page.props.title ?? '' }}</h1>
                 </slot>
                 <div class="flex items-center gap-3">
+                    <button
+                        class="grid size-8 place-items-center rounded-[var(--radius-control)] text-faint transition-colors hover:bg-sunken hover:text-ink-soft"
+                        :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                        @click="toggleTheme"
+                    >
+                        <component :is="isDark ? sun : moon" />
+                    </button>
                     <Dropdown v-if="user">
                         <template #trigger>
                             <button class="flex items-center gap-2 rounded-full transition-opacity hover:opacity-80"><Avatar :name="user.name" /></button>

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\RestrictIpAddress;
 use App\Modules\Support\Console\CheckTicketSla;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -35,6 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => ResolveTenant::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
+            'ip.allow' => RestrictIpAddress::class,
+            '2fa.enforce' => EnforceTwoFactor::class,
         ]);
 
         // Resolve the tenant after authentication but before route-model binding

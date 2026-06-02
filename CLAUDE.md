@@ -270,5 +270,27 @@ records the outcome. Settings tabs: Billing, Developer (webhooks).
 ready), specific OAuth providers (Gmail/Slack/Zoom/Shopify/QuickBooks/Xero),
 GraphQL, public REST + SDK, Zapier app.
 
-**Current status:** Phases 0–10 complete (79 Pest tests green). Phase 11
-(Security, Compliance & UX Polish) is next and not yet started.
+## Security, Compliance & UX (Phase 11)
+
+Per-tenant security policy on `tenants` (`require_2fa`, `allowed_ips` JSON).
+`EnforceTwoFactor` middleware funnels un-enrolled users to `/settings/security`
+when the workspace requires 2FA (Fortify TOTP, `confirmPassword=false` so it can
+be enabled in-app); `RestrictIpAddress` blocks IPs outside the allow-list
+(`App\Support\Security\IpMatcher` — single IP + CIDR). Both run in the
+`['auth','tenant','ip.allow','2fa.enforce']` group. The policy editor refuses an
+allow-list that omits the admin's current IP (lockout guard). Login events write
+`LoginActivity` (device/session history). Audit trail via owen-it/laravel-auditing
+(Contact/Deal/Lead are `Auditable`) with a read-only `AuditController` viewer
+(scoped to the tenant's users). GDPR via `ComplianceController`: contact JSON
+**export** (portability) + **erase** (anonymize PII, set `contacts.anonymized_at`).
+UX: **dark mode** — `.dark` overrides the semantic tokens in `resources/css/app.css`,
+toggled in the topbar, persisted to `localStorage` (no-flash init in `app.blade`).
+Settings tabs: Security, Audit log.
+
+**Deferred to a later pass:** SSO/SAML (needs an IdP), HIPAA mode + SOC2/ISO
+formal controls, field-level encryption at rest, live session revocation, and the
+larger UX backlog (global ⌘K search wiring, saved filters, bulk actions,
+automation template library).
+
+**Current status:** Phases 0–11 complete (88 Pest tests green). Phase 12
+(Industry Modules) is next and not yet started.

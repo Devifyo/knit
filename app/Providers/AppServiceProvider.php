@@ -7,6 +7,8 @@ namespace App\Providers;
 use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Lead;
+use App\Models\LoginActivity;
+use App\Models\User;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Automation\Services\WorkflowEngine;
 use App\Modules\Billing\Contracts\PaymentGateway;
@@ -14,6 +16,8 @@ use App\Modules\Billing\Gateways\ManualPaymentGateway;
 use App\Modules\Billing\Gateways\StripePaymentGateway;
 use App\Modules\Integrations\Services\WebhookDispatcher;
 use App\Services\AI\GeminiService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -70,5 +74,20 @@ class AppServiceProvider extends ServiceProvider
         Lead::created(fn (Lead $m) => $hooks()->dispatch('lead.created', $m->only(['id', 'name', 'email', 'status'])));
         Contact::created(fn (Contact $m) => $hooks()->dispatch('contact.created', $m->only(['id', 'first_name', 'last_name', 'email'])));
         Deal::created(fn (Deal $m) => $hooks()->dispatch('deal.created', $m->only(['id', 'name', 'amount', 'status'])));
+
+        // Device/session tracking — record each successful login.
+        Event::listen(Login::class, function (Login $event): void {
+            $user = $event->user;
+            if (! $user instanceof User) {
+                return;
+            }
+            LoginActivity::create([
+                'tenant_id' => $user->tenant_id,
+                'user_id' => $user->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => substr((string) request()->userAgent(), 0, 1023),
+                'logged_in_at' => now(),
+            ]);
+        });
     }
 }

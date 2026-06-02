@@ -26,14 +26,20 @@ class Contact extends Model implements AuditableContract, TenantOwned
     protected $fillable = [
         'first_name', 'last_name', 'email', 'phone', 'job_title',
         'company_id', 'lifecycle_stage', 'source', 'owner_id',
-        'social_profiles', 'custom_fields',
+        'social_profiles', 'custom_fields', 'anonymized_at',
     ];
 
     /** @var array<string, string> */
     protected $casts = [
         'social_profiles' => 'array',
         'custom_fields' => 'array',
+        'anonymized_at' => 'datetime',
     ];
+
+    public function isAnonymized(): bool
+    {
+        return $this->anonymized_at !== null;
+    }
 
     public function getNameAttribute(): string
     {

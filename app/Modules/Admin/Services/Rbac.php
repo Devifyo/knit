@@ -62,6 +62,8 @@ final class Rbac
             // Billing & integrations (account-level — Owner/Admin only)
             'billing.view', 'billing.manage',
             'integrations.view', 'integrations.manage',
+            // Security & compliance (account-level — Owner/Admin only)
+            'security.manage', 'audit.view', 'compliance.manage',
         ];
     }
 

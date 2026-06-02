@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\NoteController;
 use App\Modules\Accounts\Http\Controllers\AccountController;
+use App\Modules\Admin\Http\Controllers\AuditController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
+use App\Modules\Admin\Http\Controllers\ComplianceController;
 use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
+use App\Modules\Admin\Http\Controllers\SecurityController;
 use App\Modules\AI\Http\Controllers\MeetingController;
 use App\Modules\Analytics\Http\Controllers\ActivityFeedController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
@@ -67,7 +70,7 @@ Route::post('/forms/{slug}', [FormPublicController::class, 'submit'])->name('for
 Route::get('/track/open/{token}', [TrackingController::class, 'open'])->name('track.open');
 Route::get('/track/click/{token}', [TrackingController::class, 'click'])->name('track.click');
 
-Route::middleware(['auth', 'tenant'])->group(function () {
+Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Analytics — custom report builder + exports
@@ -215,6 +218,17 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/settings/billing/invoices/{invoice}/pdf', [InvoiceController::class, 'download'])->middleware('permission:billing.view')->name('billing.invoices.pdf');
     Route::post('/settings/billing/subscribe', [BillingController::class, 'subscribe'])->middleware('permission:billing.manage')->name('billing.subscribe');
     Route::post('/settings/billing/cancel', [BillingController::class, 'cancel'])->middleware('permission:billing.manage')->name('billing.cancel');
+
+    // Security — 2FA enrolment + sessions (any user); policy edit (Owner/Admin)
+    Route::get('/settings/security', [SecurityController::class, 'edit'])->name('security.edit');
+    Route::put('/settings/security', [SecurityController::class, 'update'])->middleware('permission:security.manage')->name('security.update');
+
+    // Compliance — audit trail + GDPR data-subject tooling
+    Route::get('/settings/audit', [AuditController::class, 'index'])->middleware('permission:audit.view')->name('audit.index');
+    Route::middleware('permission:compliance.manage')->group(function () {
+        Route::get('/contacts/{contact}/export', [ComplianceController::class, 'export'])->name('contacts.export');
+        Route::post('/contacts/{contact}/erase', [ComplianceController::class, 'erase'])->name('contacts.erase');
+    });
 
     // Integrations — outbound webhooks (developer platform)
     Route::get('/settings/webhooks', [WebhookEndpointController::class, 'index'])->middleware('permission:integrations.view')->name('webhooks.index');

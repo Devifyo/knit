@@ -6,6 +6,8 @@ const tabs = [
     { label: 'Branding', href: '/settings/branding' },
     { label: 'Members & Roles', href: '/members' },
     { label: 'Billing', href: '/settings/billing' },
+    { label: 'Security', href: '/settings/security' },
+    { label: 'Audit log', href: '/settings/audit' },
     { label: 'Developer', href: '/settings/webhooks' },
 ];
 </script>

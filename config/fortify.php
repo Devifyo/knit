@@ -171,7 +171,7 @@ return [
         Features::updatePasswords(),
         Features::twoFactorAuthentication([
             'confirm' => true,
-            'confirmPassword' => true,
+            'confirmPassword' => false, // enrol from in-app Security settings (already authenticated)
             // 'window' => 0,
         ]),
         Features::passkeys([

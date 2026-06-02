@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\Security\IpMatcher;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,7 +47,40 @@ class Tenant extends BaseTenant
             'logo_path',
             'timezone',
             'ai_enabled',
+            'require_2fa',
+            'allowed_ips',
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'ai_enabled' => 'boolean',
+            'require_2fa' => 'boolean',
+            'allowed_ips' => 'array',
+        ];
+    }
+
+    /**
+     * Whether the given client IP is permitted. An empty allow-list permits all.
+     */
+    public function ipAllowed(string $ip): bool
+    {
+        $list = $this->getAttribute('allowed_ips');
+        if (! is_array($list) || $list === []) {
+            return true;
+        }
+
+        foreach ($list as $rule) {
+            if (IpMatcher::matches($ip, (string) $rule)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
