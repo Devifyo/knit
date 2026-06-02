@@ -108,7 +108,7 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
             <div class="pointer-events-none absolute inset-0 -z-10">
                 <div class="aurora aurora-a" :style="{ background: 'var(--brand)' }" />
                 <div class="aurora aurora-b" />
-                <div class="absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style="background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0); background-size: 28px 28px;" />
+                <div class="absolute inset-0 text-ink opacity-[0.045] dark:opacity-[0.08]" style="background-image: linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 78% 65% at 50% 0%, #000, transparent 72%); -webkit-mask-image: radial-gradient(ellipse 78% 65% at 50% 0%, #000, transparent 72%);" />
             </div>
 
             <div class="mx-auto max-w-[760px] text-center">
@@ -364,7 +364,7 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
         <section class="px-5 py-16 lg:px-8">
             <div v-reveal class="relative mx-auto max-w-[1100px] overflow-hidden rounded-3xl p-12 text-center text-white shadow-e3"
                  :style="{ background: 'linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 58%, #09090b))' }">
-                <div class="pointer-events-none absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0); background-size: 24px 24px;" />
+                <div class="pointer-events-none absolute inset-0 opacity-[0.14]" style="background-image: linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px); background-size: 52px 52px; mask-image: radial-gradient(ellipse 95% 95% at 50% 0%, #000, transparent 78%); -webkit-mask-image: radial-gradient(ellipse 95% 95% at 50% 0%, #000, transparent 78%);" />
                 <h2 class="relative text-[clamp(1.9rem,4vw,2.8rem)] font-semibold tracking-[-0.025em]">Bring your whole pipeline together.</h2>
                 <p class="relative mx-auto mt-3 max-w-lg text-white/80">Create a workspace in under a minute. Invite your team. No credit card required.</p>
                 <Link href="/register" class="relative mt-8 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-white px-6 py-3 text-sm font-semibold text-ink shadow-e2 transition-transform hover:-translate-y-0.5">

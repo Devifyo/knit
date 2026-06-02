@@ -19,9 +19,9 @@ const features = [
         <!-- Brand panel (desktop) -->
         <div class="relative hidden flex-col justify-between overflow-hidden p-12 text-white lg:flex"
              style="background: linear-gradient(145deg, var(--brand), color-mix(in srgb, var(--brand) 62%, #09090b));">
-            <!-- soft decorative light + dot grid -->
-            <div class="pointer-events-none absolute inset-0 opacity-[0.18]"
-                 style="background-image: radial-gradient(circle at 1px 1px, #fff 1px, transparent 0); background-size: 22px 22px;" />
+            <!-- soft decorative glow + faint grid lines -->
+            <div class="pointer-events-none absolute inset-0 opacity-[0.13]"
+                 style="background-image: linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px); background-size: 54px 54px; mask-image: radial-gradient(ellipse 100% 80% at 30% 0%, #000, transparent 80%); -webkit-mask-image: radial-gradient(ellipse 100% 80% at 30% 0%, #000, transparent 80%);" />
             <div class="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full"
                  style="background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);" />
 
