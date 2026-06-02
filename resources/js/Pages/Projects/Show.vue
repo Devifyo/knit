@@ -75,6 +75,19 @@ const fmtMin = (m) => m >= 60 ? `${(m / 60).toFixed(1)}h` : `${m}m`;
                     <p class="text-lg font-semibold tracking-[-0.01em] text-ink nums">{{ project.total_hours }}h</p>
                 </div>
             </div>
+
+            <!-- Linked CRM records -->
+            <div v-if="project.deal || project.company || project.contact" class="mt-3 flex flex-wrap items-center gap-2">
+                <Link v-if="project.deal" :href="`/deals/${project.deal.id}`" class="inline-flex items-center gap-1.5 rounded-full bg-sunken px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-hairline transition-colors hover:text-[var(--brand)]">
+                    <span class="text-faint">Deal</span> {{ project.deal.name }} <span class="nums text-muted">{{ project.deal.amount }}</span>
+                </Link>
+                <Link v-if="project.company" :href="`/companies/${project.company.id}`" class="inline-flex items-center gap-1.5 rounded-full bg-sunken px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-hairline transition-colors hover:text-[var(--brand)]">
+                    <span class="text-faint">Company</span> {{ project.company.name }}
+                </Link>
+                <Link v-if="project.contact" :href="`/contacts/${project.contact.id}`" class="inline-flex items-center gap-1.5 rounded-full bg-sunken px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-hairline transition-colors hover:text-[var(--brand)]">
+                    <span class="text-faint">Contact</span> {{ project.contact.name }}
+                </Link>
+            </div>
         </div>
 
         <!-- Add task -->

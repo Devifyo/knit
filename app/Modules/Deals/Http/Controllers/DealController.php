@@ -10,6 +10,7 @@ use App\Models\Deal;
 use App\Models\DealProduct;
 use App\Models\Pipeline;
 use App\Models\Product;
+use App\Models\Project;
 use App\Models\Quote;
 use App\Models\Stage;
 use App\Modules\Analytics\Events\DashboardStatsUpdated;
@@ -26,7 +27,7 @@ class DealController extends Controller
 
     public function show(Deal $deal): Response
     {
-        $deal->load(['contact:id,first_name,last_name', 'company:id,name', 'owner:id,name', 'stage:id,name', 'quotes', 'products', 'activities.user:id,name']);
+        $deal->load(['contact:id,first_name,last_name', 'company:id,name', 'owner:id,name', 'stage:id,name', 'quotes', 'products', 'activities.user:id,name', 'projects']);
 
         return Inertia::render('Deals/Show', [
             'deal' => [
@@ -61,6 +62,10 @@ class DealController extends Controller
                 'activities' => $deal->activities->map(fn ($a) => [
                     'id' => $a->id, 'type' => $a->type, 'body' => $a->body,
                     'author' => $a->user?->name, 'at' => $a->created_at?->diffForHumans(),
+                ]),
+                // Delivery projects spun up from this deal.
+                'projects' => $deal->projects->map(fn (Project $p) => [
+                    'id' => $p->id, 'name' => $p->name, 'status' => $p->status,
                 ]),
             ],
             'catalog' => Product::where('active', true)->get(['id', 'name', 'unit_price', 'currency']),

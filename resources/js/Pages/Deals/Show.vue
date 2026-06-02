@@ -12,6 +12,10 @@ const riskColor = (r) => ({ low: 'positive', medium: 'warning', high: 'critical'
 const newQuote = useForm({ deal_id: props.deal.id, currency: 'USD', tax_rate: 0 });
 const createQuote = () => newQuote.post('/quotes');
 
+// Spin up a delivery project from this deal — it inherits the deal's customer.
+const newProject = useForm({ deal_id: props.deal.id, name: `${props.deal.name} — delivery` });
+const startProject = () => newProject.post('/projects');
+
 const prod = useForm({ product_id: '', quantity: 1, discount_pct: 0 });
 const addProduct = () => prod.post(`/deals/${props.deal.id}/products`, { preserveScroll: true, onSuccess: () => prod.reset() });
 const removeProduct = (pivotId) => router.delete(`/deals/${props.deal.id}/products/${pivotId}`, { preserveScroll: true });
@@ -102,6 +106,17 @@ const qStatusColor = (s) => ({ draft: 'neutral', sent: 'info', accepted: 'positi
                         </li>
                     </ul>
                     <p v-else class="text-sm text-muted">No quotes yet — create one to build a proposal and export a PDF.</p>
+                </Card>
+
+                <Card title="Projects" subtitle="Delivery work for this deal">
+                    <template #header><Button size="sm" variant="secondary" :loading="newProject.processing" @click="startProject">Start project</Button></template>
+                    <ul v-if="deal.projects.length" class="divide-y divide-hairline-soft">
+                        <li v-for="p in deal.projects" :key="p.id" class="flex items-center justify-between py-2.5">
+                            <Link :href="`/projects/${p.id}`" class="text-sm font-medium text-[var(--brand)] hover:underline">{{ p.name }}</Link>
+                            <Tag size="sm" color="neutral">{{ p.status }}</Tag>
+                        </li>
+                    </ul>
+                    <p v-else class="text-sm text-muted">No projects yet — start one to track delivery on a shared board.</p>
                 </Card>
 
                 <Card title="Activity">

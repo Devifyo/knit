@@ -4,11 +4,11 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { Button, Card, Modal, Input, EmptyState } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
-defineProps({ projects: Array });
+defineProps({ projects: Array, deals: Array });
 
 const { can } = usePermissions();
 const open = ref(false);
-const form = useForm({ name: '', description: '' });
+const form = useForm({ name: '', description: '', deal_id: '' });
 const submit = () => form.post('/projects', { onSuccess: () => { open.value = false; form.reset(); } });
 </script>
 
@@ -37,6 +37,9 @@ const submit = () => form.post('/projects', { onSuccess: () => { open.value = fa
                         <span class="nums">{{ p.done }} / {{ p.tasks }} tasks done</span>
                         <span v-if="p.owner">{{ p.owner }}</span>
                     </div>
+                    <div v-if="p.customer" class="mt-2 border-t border-hairline-soft pt-2 text-xs text-muted">
+                        For <span class="font-medium text-ink-soft">{{ p.customer }}</span>
+                    </div>
                 </Card>
             </Link>
         </div>
@@ -52,6 +55,13 @@ const submit = () => form.post('/projects', { onSuccess: () => { open.value = fa
         <Modal :open="open" title="New project" @close="open = false">
             <form class="space-y-4" @submit.prevent="submit">
                 <Input v-model="form.name" label="Name" placeholder="Q3 Onboarding revamp" :error="form.errors.name" required />
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium text-muted">Linked deal <span class="text-faint">(optional — inherits its customer)</span></label>
+                    <select v-model="form.deal_id" class="h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]">
+                        <option value="">No deal — internal project</option>
+                        <option v-for="d in deals" :key="d.id" :value="d.id">{{ d.name }}<template v-if="d.company"> · {{ d.company }}</template></option>
+                    </select>
+                </div>
                 <div>
                     <label class="mb-1.5 block text-xs font-medium text-muted">Description</label>
                     <textarea v-model="form.description" rows="3" class="w-full rounded-[var(--radius-control)] bg-surface px-3 py-2 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]" />

@@ -191,10 +191,16 @@ class DatabaseSeeder extends Seeder
 
             // Phase 9 — a shared project with a populated kanban board, subtasks,
             // logged time and an attached brief so the workspace looks lived-in.
+            // Linked to a won deal so it inherits that deal's company + contact,
+            // mirroring how popular CRMs spin delivery work off a closed deal.
+            $wonDeal = Deal::where('status', 'won')->first() ?? Deal::first();
             $project = Project::create([
                 'name' => 'Customer onboarding revamp',
                 'description' => 'Redesign the first-run experience to cut time-to-value for new customers.',
                 'owner_id' => $owner->id,
+                'deal_id' => $wonDeal?->id,
+                'company_id' => $wonDeal?->company_id,
+                'contact_id' => $wonDeal?->contact_id,
             ]);
             $teammate = $tenant->users()->where('id', '!=', $owner->id)->first() ?? $owner;
             $board = [

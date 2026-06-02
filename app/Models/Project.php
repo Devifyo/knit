@@ -20,11 +20,29 @@ class Project extends Model implements HasMedia, TenantOwned
     use BelongsToTenant, HasFactory, InteractsWithMedia;
 
     /** @var list<string> */
-    protected $fillable = ['name', 'description', 'status', 'owner_id'];
+    protected $fillable = ['name', 'description', 'status', 'owner_id', 'deal_id', 'company_id', 'contact_id'];
 
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('files');
+    }
+
+    /** @return BelongsTo<Deal, $this> */
+    public function deal(): BelongsTo
+    {
+        return $this->belongsTo(Deal::class);
+    }
+
+    /** @return BelongsTo<Company, $this> */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /** @return BelongsTo<Contact, $this> */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     /** @return HasMany<ProjectTask, $this> */

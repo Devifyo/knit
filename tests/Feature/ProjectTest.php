@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Models\Activity;
+use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Deal;
+use App\Models\Pipeline;
 use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\Tenant;
@@ -116,6 +119,35 @@ it('shows a workspace activity feed of recent events', function () {
             ->has('activities', 1)
             ->where('activities.0.body', 'Called the customer about renewal')
             ->where('activities.0.subject', 'Contact'));
+});
+
+it('links a project to a deal and inherits the deal’s company and contact', function () {
+    [, $owner] = projectWorkspace('Acme', 'o@acme.test');
+    $company = Company::factory()->create();
+    $contact = Contact::factory()->create(['company_id' => $company->id, 'owner_id' => $owner->id]);
+    $pipeline = Pipeline::where('is_default', true)->first();
+    $deal = Deal::factory()->create([
+        'pipeline_id' => $pipeline->id, 'stage_id' => $pipeline->stages()->first()->id,
+        'company_id' => $company->id, 'contact_id' => $contact->id, 'owner_id' => $owner->id,
+    ]);
+
+    $this->actingAs($owner)->post('/projects', ['name' => 'Onboarding', 'deal_id' => $deal->id])
+        ->assertRedirect();
+
+    $project = Project::first();
+    expect($project->deal_id)->toBe($deal->id)
+        ->and($project->company_id)->toBe($company->id)
+        ->and($project->contact_id)->toBe($contact->id)
+        // ...the deal now lists the project, and an activity lands on its timeline.
+        ->and($deal->projects()->count())->toBe(1)
+        ->and($deal->activities()->where('body', 'like', 'Project%')->exists())->toBeTrue();
+
+    // The project's show page exposes clickable links back into the graph.
+    $this->actingAs($owner)->get("/projects/{$project->id}")
+        ->assertInertia(fn ($p) => $p->component('Projects/Show', false)
+            ->where('project.deal.id', $deal->id)
+            ->where('project.company.name', $company->name)
+            ->where('project.contact.name', $contact->name));
 });
 
 it('isolates projects between tenants', function () {

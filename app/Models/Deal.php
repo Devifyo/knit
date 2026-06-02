@@ -85,6 +85,12 @@ class Deal extends Model implements AuditableContract, TenantOwned
         return $this->hasMany(Quote::class)->latest();
     }
 
+    /** @return HasMany<Project, $this> */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class)->latest();
+    }
+
     /** @return BelongsToMany<Product, $this, DealProduct, 'pivot'> */
     public function products(): BelongsToMany
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Projects\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deal;
 use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\User;
@@ -21,24 +22,33 @@ class ProjectController extends Controller
 
     public function index(): Response
     {
-        $projects = Project::with('owner:id,name')->withCount([
+        $projects = Project::with(['owner:id,name', 'company:id,name', 'contact:id,first_name,last_name'])->withCount([
             'allTasks as tasks',
             'allTasks as done' => fn ($q) => $q->where('status', 'done'),
         ])->latest()->get()->map(fn (Project $p): array => [
             'id' => $p->id,
             'name' => $p->name,
             'owner' => $p->owner?->name,
+            'customer' => optional($p->company)->name ?? optional($p->contact)->name,
             'tasks' => $p->getAttribute('tasks'),
             'done' => $p->getAttribute('done'),
             'progress' => $p->getAttribute('tasks') > 0 ? round($p->getAttribute('done') / $p->getAttribute('tasks') * 100) : 0,
         ])->all();
 
-        return Inertia::render('Projects/Index', ['projects' => $projects]);
+        return Inertia::render('Projects/Index', [
+            'projects' => $projects,
+            // Open + won deals are eligible to spin up a delivery project.
+            'deals' => Deal::with('company:id,name')->whereIn('status', ['open', 'won'])->latest()->get()
+                ->map(fn (Deal $d): array => ['id' => $d->id, 'name' => $d->name, 'company' => $d->company?->name]),
+        ]);
     }
 
     public function show(Project $project): Response
     {
-        $project->load(['tasks.subtasks', 'tasks.assignee:id,name', 'tasks.timeEntries', 'media']);
+        $project->load([
+            'tasks.subtasks', 'tasks.assignee:id,name', 'tasks.timeEntries', 'media',
+            'deal:id,name,amount,currency', 'company:id,name', 'contact:id,first_name,last_name',
+        ]);
 
         $columns = collect(self::COLUMNS)->map(fn ($title, $status) => [
             'id' => $status,
@@ -61,6 +71,10 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'owner' => $project->owner?->name,
                 'total_hours' => round($totalMinutes / 60, 1),
+                // Linked CRM records — clickable chips back into the graph.
+                'deal' => $project->deal ? ['id' => $project->deal->id, 'name' => $project->deal->name, 'amount' => $project->deal->formattedAmount()] : null,
+                'company' => $project->company ? ['id' => $project->company->id, 'name' => $project->company->name] : null,
+                'contact' => $project->contact ? ['id' => $project->contact->id, 'name' => $project->contact->name] : null,
                 'files' => $project->getMedia('files')->map(fn (Media $m) => [
                     'id' => $m->id, 'name' => $m->file_name, 'size' => round($m->size / 1024).' KB',
                 ]),
@@ -72,8 +86,31 @@ class ProjectController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'description' => ['nullable', 'string', 'max:2000']]);
-        $project = Project::create([...$data, 'owner_id' => $request->user()->id]);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'deal_id' => ['nullable', 'exists:deals,id'],
+        ]);
+
+        // Like the popular CRMs: a project hangs off a deal and inherits that
+        // deal's customer (company + contact) so the whole graph stays linked.
+        $attributes = ['name' => $data['name'], 'description' => $data['description'] ?? null, 'owner_id' => $request->user()->id];
+        if (! empty($data['deal_id'])) {
+            $deal = Deal::findOrFail($data['deal_id']);
+            $attributes['deal_id'] = $deal->id;
+            $attributes['company_id'] = $deal->company_id;
+            $attributes['contact_id'] = $deal->contact_id;
+        }
+
+        $project = Project::create($attributes);
+
+        if (isset($deal)) {
+            $deal->activities()->create([
+                'type' => 'note',
+                'body' => "Project “{$project->name}” started for this deal.",
+                'user_id' => $request->user()->id,
+            ]);
+        }
 
         return redirect("/projects/{$project->id}")->with('success', 'Project created.');
     }
