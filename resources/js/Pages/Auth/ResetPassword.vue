@@ -3,7 +3,7 @@ import { useForm, Head } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import { Button, Input } from '@/Components/ui';
 
-defineOptions({ layout: AuthLayout });
+defineOptions({ layout: null });
 const props = defineProps({ email: String, token: String });
 
 const form = useForm({

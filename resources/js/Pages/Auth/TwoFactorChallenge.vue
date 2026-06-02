@@ -4,7 +4,7 @@ import { useForm, Head } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import { Button, Input } from '@/Components/ui';
 
-defineOptions({ layout: AuthLayout });
+defineOptions({ layout: null });
 
 const recovery = ref(false);
 const form = useForm({ code: '', recovery_code: '' });
@@ -21,7 +21,7 @@ const submit = () => form.post('/two-factor-challenge');
 
             <Button type="submit" class="w-full" :loading="form.processing">Verify</Button>
         </form>
-        <button class="mt-4 w-full text-center text-sm text-brand-600 hover:underline" @click="recovery = !recovery">
+        <button class="mt-4 w-full text-center text-sm font-medium text-[var(--brand)] hover:underline" @click="recovery = !recovery">
             {{ recovery ? 'Use authenticator code' : 'Use a recovery code' }}
         </button>
     </AuthLayout>
