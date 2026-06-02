@@ -19,12 +19,16 @@ use App\Modules\Deals\Http\Controllers\DealController;
 use App\Modules\Deals\Http\Controllers\QuoteController;
 use App\Modules\Leads\Http\Controllers\LeadCaptureController;
 use App\Modules\Leads\Http\Controllers\LeadController;
+use App\Modules\Support\Http\Controllers\HelpController;
+use App\Modules\Support\Http\Controllers\KbController;
+use App\Modules\Support\Http\Controllers\SupportWebhookController;
+use App\Modules\Support\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'phase' => 'Phase 4 — Communication & Inbox',
+        'phase' => 'Phase 5 — Customer Support',
         'laravelVersion' => app()->version(),
         'phpVersion' => PHP_VERSION,
     ]);
@@ -40,6 +44,11 @@ Route::post('/invite/{token}', [InvitationController::class, 'accept'])->name('i
 
 // Public inbound-email webhook (mail provider posts here). Threads into the inbox.
 Route::post('/webhooks/mail/{slug}', InboundWebhookController::class)->name('webhooks.mail');
+
+// Public support intake webhook + self-service help portal (KB + AI chatbot).
+Route::post('/webhooks/support/{slug}', SupportWebhookController::class)->name('webhooks.support');
+Route::get('/help/{slug}', [HelpController::class, 'show'])->name('help.show');
+Route::post('/help/{slug}/ask', [HelpController::class, 'ask'])->name('help.ask');
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -90,6 +99,24 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // Team chat
     Route::get('/chat', [ChatController::class, 'index'])->middleware('permission:chat.use')->name('chat.index');
     Route::post('/chat', [ChatController::class, 'send'])->middleware('permission:chat.use')->name('chat.send');
+
+    // Support — tickets
+    Route::middleware('permission:tickets.view')->group(function () {
+        Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    });
+    Route::middleware('permission:tickets.manage')->group(function () {
+        Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+        Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+        Route::post('/tickets/simulate', [TicketController::class, 'simulate'])->name('tickets.simulate');
+    });
+
+    // Helpdesk knowledge base (admin)
+    Route::middleware('permission:kb.manage')->group(function () {
+        Route::get('/kb', [KbController::class, 'index'])->name('kb.index');
+        Route::post('/kb', [KbController::class, 'store'])->name('kb.store');
+        Route::delete('/kb/{article}', [KbController::class, 'destroy'])->name('kb.destroy');
+    });
 
     // Automation — workflows
     Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');

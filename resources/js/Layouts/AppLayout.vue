@@ -44,6 +44,8 @@ const icons = {
     workflows: icon('M6 3v12M6 21a3 3 0 100-6 3 3 0 000 6zM6 3a3 3 0 100 0M18 9a3 3 0 100-6 3 3 0 000 6zm0 0a9 9 0 01-9 9'),
     inbox: icon('M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z'),
     chat: icon('M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'),
+    tickets: icon('M3 9a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V9zM13 7v10'),
+    kb: icon('M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -61,6 +63,10 @@ const groups = [
     { label: 'Communicate', items: [
         { label: 'Inbox', href: '/inbox', icon: 'inbox' },
         { label: 'Team chat', href: '/chat', icon: 'chat' },
+    ] },
+    { label: 'Support', items: [
+        { label: 'Tickets', href: '/tickets', icon: 'tickets' },
+        { label: 'Knowledge base', href: '/kb', icon: 'kb' },
     ] },
     { label: 'Automate', items: [
         { label: 'Tasks', href: '/tasks', icon: 'tasks' },

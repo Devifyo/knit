@@ -194,5 +194,17 @@ writes an `Activity` onto that contact's timeline. Public webhook
 `NewInboundMessage` → `tenant.{id}.inbox`; `UserMentioned` → notifications;
 `ChatMessageSent` → presence `tenant.{id}.chat` (team chat online roster).
 
-**Current status:** Phases 0–4 complete (43 Pest tests green). Phase 5 (Customer
-Support) is next and not yet started.
+## Support (Phase 5)
+
+`App\Modules\Support`: `Ticket` + `TicketReply` + `KbArticle`. Intake is
+channel-agnostic — implement `Contracts\ChannelAdapter` per channel
+(`EmailChannelAdapter` shipped) and feed `TicketIntakeService::fromChannel()`
+(links contact, starts SLA via `SlaService`, routes via `AssignmentService`,
+timelines it). `EscalationService::escalateBreached()` is run by the
+`tickets:check-sla` command (scheduled every minute in `routes/console.php`,
+registered in `bootstrap/app.php` withCommands) — it loops tenants and escalates
+SLA-breached tickets idempotently. Public: `POST /webhooks/support/{slug}` intake
+and the self-service portal `/help/{slug}` (KB + AI chatbot via `GeminiService`).
+
+**Current status:** Phases 0–5 complete (49 Pest tests green). Phase 6 (Marketing
+Automation) is next and not yet started.

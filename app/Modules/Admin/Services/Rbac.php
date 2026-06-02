@@ -51,6 +51,8 @@ final class Rbac
             'quotes.view', 'quotes.manage',
             // Communication
             'inbox.view', 'inbox.manage', 'chat.use',
+            // Support
+            'tickets.view', 'tickets.manage', 'kb.manage',
         ];
     }
 
@@ -80,6 +82,7 @@ final class Rbac
                 'tasks.view', 'tasks.manage',
                 'quotes.view', 'quotes.manage',
                 'inbox.view', 'inbox.manage', 'chat.use',
+                'tickets.view', 'tickets.manage', 'kb.manage',
             ],
             self::AGENT => [
                 'notes.view', 'notes.create',
@@ -91,6 +94,7 @@ final class Rbac
                 'tasks.view', 'tasks.manage',
                 'quotes.view', 'quotes.manage',
                 'inbox.view', 'inbox.manage', 'chat.use',
+                'tickets.view', 'tickets.manage',
             ],
         ];
     }

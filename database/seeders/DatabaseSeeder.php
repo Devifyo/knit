@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Invitation;
+use App\Models\KbArticle;
 use App\Models\Lead;
 use App\Models\Note;
 use App\Models\Pipeline;
@@ -21,6 +22,8 @@ use App\Models\Workflow;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use App\Modules\Communication\Services\InboundEmailService;
+use App\Modules\Support\Channels\EmailChannelAdapter;
+use App\Modules\Support\Services\TicketIntakeService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -149,6 +152,21 @@ class DatabaseSeeder extends Seeder
             }
 
             ChatMessage::create(['user_id' => $owner->id, 'body' => "Morning team — let's move those deals forward today."]);
+
+            // Phase 5 — KB articles + routed support tickets (one breached for demo).
+            KbArticle::create(['title' => 'Resetting your password', 'slug' => 'reset-password', 'body' => 'Open Settings → Security and choose “Reset password”. You will receive an email with a secure link.', 'published' => true]);
+            KbArticle::create(['title' => 'Billing & invoices', 'slug' => 'billing', 'body' => 'Invoices are emailed at the start of each month. Manage payment methods under Settings → Billing.', 'published' => true]);
+
+            $intake = app(TicketIntakeService::class);
+            $intake->fromChannel(new EmailChannelAdapter, [
+                'from_email' => $contact?->email ?? 'pat@customer.test', 'subject' => 'How do I export my data?',
+                'body' => 'I need a CSV export of my contacts.',
+            ], 'normal');
+            $breached = $intake->fromChannel(new EmailChannelAdapter, [
+                'from_email' => 'urgent@customer.test', 'subject' => 'Production site is down',
+                'body' => 'We cannot access the app at all!',
+            ], 'urgent');
+            $breached->forceFill(['sla_due_at' => now()->subHour()])->save(); // overdue → scheduler will escalate
 
             tenancy()->end();
         }

@@ -92,15 +92,23 @@ shared inbox, a reply threads into the same conversation (not a new one), and it
 appears on the related contact's timeline; webhook intake works; @mention notifies;
 chat broadcasts. Pint + PHPStan L6 green.
 
-## 🔜 Phase 5 — Customer Support (next)
-Ticketing (SLA timers, priority routing, auto-assignment, escalation), omnichannel
-intake via `ChannelAdapter` (email, chat, WhatsApp, FB/IG, voice), helpdesk (KB,
-FAQ, forums, portal, AI chatbot).
+## ✅ Phase 5 — Customer Support
+Ticketing (`App\Modules\Support`): Ticket + TicketReply with priority/status, an
+**SLA first-response timer** (`SlaService`), **least-loaded auto-assignment**
+(`AssignmentService`), and **escalation** (`EscalationService` + `tickets:check-sla`
+scheduled every minute → bumps priority, reassigns to a manager, notifies).
+Omnichannel intake behind a **`ChannelAdapter`** contract (`EmailChannelAdapter`
+shipped) via `TicketIntakeService` (links contact + starts SLA + routes + timelines).
+Public support webhook + dev simulator. Helpdesk KB with a **public self-service
+portal** (`/help/{slug}`) and an **AI chatbot** answering from KB via `GeminiService`
+(graceful fallback). First public agent reply stops the SLA clock.
 
-**Acceptance:** inbound email creates a ticket, SLA timer starts, routing assigns
-an agent, breach triggers escalation.
+**Acceptance — met (6 new Pest tests, 49 total):** inbound email → ticket created,
+**linked to the contact**, SLA timer started, **auto-assigned**, and an SLA breach
+triggers **escalation** (verified live: the scheduled command escalated the seeded
+overdue ticket to urgent). Pint + PHPStan L6 green. VoIP/video remain adapter stubs (Phase 10).
 
-## ⬜ Phase 6 — Marketing Automation
+## 🔜 Phase 6 — Marketing Automation (next)
 Email marketing (campaign + TipTap editor, sequences, drip, A/B, open/click
 analytics), landing page/funnel/form builder, SMS & WhatsApp, social scheduling +
 inbox.
