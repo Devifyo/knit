@@ -184,5 +184,15 @@ Triggers are registered in `AppServiceProvider` on model `created` events. CPQ:
 `PricingService` does all money math in integer minor units; quote PDFs render via
 `resources/views/pdf/quote.blade.php` (dompdf).
 
-**Current status:** Phases 0–3 complete (29 Pest tests green). Phase 4
-(Communication & Inbox) is next and not yet started.
+## Communication (Phase 4)
+
+`App\Modules\Communication`: shared-inbox `Conversation` + `Message` (threading via
+In-Reply-To then subject fallback; internal notes via `is_internal`; read receipts).
+`InboundEmailService` threads inbound mail, links the sender to a `Contact`, and
+writes an `Activity` onto that contact's timeline. Public webhook
+`POST /webhooks/mail/{slug}` (CSRF-exempt via `webhooks/*`). Broadcast events:
+`NewInboundMessage` → `tenant.{id}.inbox`; `UserMentioned` → notifications;
+`ChatMessageSent` → presence `tenant.{id}.chat` (team chat online roster).
+
+**Current status:** Phases 0–4 complete (43 Pest tests green). Phase 5 (Customer
+Support) is next and not yet started.

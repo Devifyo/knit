@@ -22,7 +22,12 @@ watch(() => branding.value?.brand_color, applyBrand);
 
 onMounted(() => {
     const id = tenant.value?.id;
-    if (id) useEcho(`tenant.${id}.notifications`, '.NoteCreated', (e) => toast.push({ message: e.message, type: 'info' }));
+    if (id) {
+        useEcho(`tenant.${id}.notifications`, '.NoteCreated', (e) => toast.push({ message: e.message, type: 'info' }));
+        useEcho(`tenant.${id}.notifications`, '.UserMentioned', (e) => {
+            if (e.to_user_id === user.value?.id) toast.push({ message: e.message, type: 'info' });
+        });
+    }
 });
 
 // Minimal stroke icons (no emoji per design system).
@@ -37,6 +42,8 @@ const icons = {
     quotes: icon('M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M8 13h8M8 17h8'),
     tasks: icon('M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11'),
     workflows: icon('M6 3v12M6 21a3 3 0 100-6 3 3 0 000 6zM6 3a3 3 0 100 0M18 9a3 3 0 100-6 3 3 0 000 6zm0 0a9 9 0 01-9 9'),
+    inbox: icon('M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z'),
+    chat: icon('M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -50,6 +57,10 @@ const groups = [
         { label: 'Deals', href: '/deals', icon: 'deals' },
         { label: 'Quotes', href: '/quotes', icon: 'quotes' },
         { label: 'Accounts', href: '/accounts', icon: 'accounts' },
+    ] },
+    { label: 'Communicate', items: [
+        { label: 'Inbox', href: '/inbox', icon: 'inbox' },
+        { label: 'Team chat', href: '/chat', icon: 'chat' },
     ] },
     { label: 'Automate', items: [
         { label: 'Tasks', href: '/tasks', icon: 'tasks' },

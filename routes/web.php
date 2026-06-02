@@ -10,6 +10,9 @@ use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
 use App\Modules\Automation\Http\Controllers\TaskController;
 use App\Modules\Automation\Http\Controllers\WorkflowController;
+use App\Modules\Communication\Http\Controllers\ChatController;
+use App\Modules\Communication\Http\Controllers\InboundWebhookController;
+use App\Modules\Communication\Http\Controllers\InboxController;
 use App\Modules\Contacts\Http\Controllers\CompanyController;
 use App\Modules\Contacts\Http\Controllers\ContactController;
 use App\Modules\Deals\Http\Controllers\DealController;
@@ -21,7 +24,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'phase' => 'Phase 2 — Core CRM',
+        'phase' => 'Phase 4 — Communication & Inbox',
         'laravelVersion' => app()->version(),
         'phpVersion' => PHP_VERSION,
     ]);
@@ -34,6 +37,9 @@ Route::post('/f/{slug}', [LeadCaptureController::class, 'submit'])->name('lead-c
 // Public invitation acceptance (no auth — the invitee may have no account yet).
 Route::get('/invite/{token}', [InvitationController::class, 'show'])->name('invitations.show');
 Route::post('/invite/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
+
+// Public inbound-email webhook (mail provider posts here). Threads into the inbox.
+Route::post('/webhooks/mail/{slug}', InboundWebhookController::class)->name('webhooks.mail');
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -67,6 +73,23 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Accounts
     Route::get('/accounts', [AccountController::class, 'index'])->middleware('permission:accounts.view')->name('accounts.index');
+
+    // Shared inbox
+    Route::middleware('permission:inbox.view')->group(function () {
+        Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
+        Route::get('/inbox/{conversation}', [InboxController::class, 'show'])->name('inbox.show');
+    });
+    Route::middleware('permission:inbox.manage')->group(function () {
+        Route::post('/inbox/{conversation}/reply', [InboxController::class, 'reply'])->name('inbox.reply');
+        Route::post('/inbox/{conversation}/note', [InboxController::class, 'note'])->name('inbox.note');
+        Route::patch('/inbox/{conversation}/assign', [InboxController::class, 'assign'])->name('inbox.assign');
+        Route::patch('/inbox/{conversation}/status', [InboxController::class, 'status'])->name('inbox.status');
+        Route::post('/inbox/simulate', [InboxController::class, 'simulate'])->name('inbox.simulate');
+    });
+
+    // Team chat
+    Route::get('/chat', [ChatController::class, 'index'])->middleware('permission:chat.use')->name('chat.index');
+    Route::post('/chat', [ChatController::class, 'send'])->middleware('permission:chat.use')->name('chat.send');
 
     // Automation — workflows
     Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');

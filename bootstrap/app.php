@@ -24,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        // Inbound provider webhooks can't carry a CSRF token.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
         $middleware->alias([
             'tenant' => ResolveTenant::class,
             'role' => RoleMiddleware::class,

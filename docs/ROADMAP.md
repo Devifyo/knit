@@ -77,11 +77,22 @@ Deferred to integration phases: calendar sync (Google/Outlook) + meeting schedul
 + e-signature + approval chains (adapters, Phase 10); SMS/WhatsApp steps (Phase 6);
 visual step editor (template-based creation for now).
 
-## 🔜 Phase 4 — Communication & Inbox (next)
-Shared inbox, unified timeline, email threading/tracking/read receipts, internal
-comments/mentions, team chat (Reverb presence). VoIP/video behind adapters.
+## ✅ Phase 4 — Communication & Inbox
+Shared inbox (`App\Modules\Communication`): Conversation + Message models with
+threading (In-Reply-To + subject fallback) and read receipts. `InboundEmailService`
+threads inbound mail, links it to a matching contact, and drops an Activity on that
+contact's timeline. Public inbound webhook (`/webhooks/mail/{slug}`, CSRF-exempt) +
+a dev "simulate inbound" tool. Thread view with reply (outbound email), **internal
+notes with @mentions** (live toast to the mentioned teammate), assign + status.
+Team chat over a **Reverb presence channel** (online roster + live messages).
+VoIP/video remain adapter stubs (Phase 10).
 
-## ⬜ Phase 5 — Customer Support
+**Acceptance — met (5 new Pest tests, 43 total):** inbound email lands in the
+shared inbox, a reply threads into the same conversation (not a new one), and it
+appears on the related contact's timeline; webhook intake works; @mention notifies;
+chat broadcasts. Pint + PHPStan L6 green.
+
+## 🔜 Phase 5 — Customer Support (next)
 Ticketing (SLA timers, priority routing, auto-assignment, escalation), omnichannel
 intake via `ChannelAdapter` (email, chat, WhatsApp, FB/IG, voice), helpdesk (KB,
 FAQ, forums, portal, AI chatbot).

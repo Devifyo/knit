@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Account;
+use App\Models\ChatMessage;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
@@ -19,6 +20,7 @@ use App\Models\User;
 use App\Models\Workflow;
 use App\Modules\Admin\Services\Rbac;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
+use App\Modules\Communication\Services\InboundEmailService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -129,6 +131,24 @@ class DatabaseSeeder extends Seeder
                 'invited_by' => $owner->id,
                 'expires_at' => now()->addDays(7),
             ]);
+
+            // Phase 4 — a threaded inbox conversation linked to a contact + team chat.
+            $contact = Contact::whereNotNull('email')->first();
+            if ($contact) {
+                $svc = app(InboundEmailService::class);
+                $msg = $svc->handle([
+                    'from_email' => $contact->email, 'from_name' => $contact->first_name,
+                    'subject' => 'Interested in a demo', 'body' => "Hi, we'd love a demo of your product. When are you free?",
+                    'message_id' => (string) Str::uuid(),
+                ]);
+                $svc->handle([
+                    'from_email' => $contact->email, 'from_name' => $contact->first_name,
+                    'subject' => 'Re: Interested in a demo', 'body' => 'Following up — also, do you offer annual billing?',
+                    'message_id' => (string) Str::uuid(), 'in_reply_to' => $msg->external_id,
+                ]);
+            }
+
+            ChatMessage::create(['user_id' => $owner->id, 'body' => "Morning team — let's move those deals forward today."]);
 
             tenancy()->end();
         }

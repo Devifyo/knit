@@ -28,6 +28,18 @@ Broadcast::channel('tenant.{tenantId}.inbox.{userId}', function ($user, string $
     return userBelongsToTenant($user, $tenantId) && (string) $user->id === $userId;
 });
 
+// Shared-inbox live updates (whole workspace).
+Broadcast::channel('tenant.{tenantId}.inbox', function ($user, string $tenantId) {
+    return userBelongsToTenant($user, $tenantId);
+});
+
+// Team chat presence — returns member identity for the online roster.
+Broadcast::channel('tenant.{tenantId}.chat', function ($user, string $tenantId) {
+    return userBelongsToTenant($user, $tenantId)
+        ? ['id' => $user->id, 'name' => $user->name]
+        : false;
+});
+
 Broadcast::channel('tenant.{tenantId}.dashboard', function ($user, string $tenantId) {
     return userBelongsToTenant($user, $tenantId);
 });
