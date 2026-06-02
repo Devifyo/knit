@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch, h } from 'vue';
+import { computed, onMounted, onBeforeUnmount, nextTick, ref, watch, h } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { Avatar, Toast, CommandPalette, Dropdown, DropdownItem } from '@/Components/ui';
 import { useTenant } from '@/Composables/useTenant';
@@ -153,6 +153,41 @@ const toggleTheme = () => {
 const sun = icon('M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z');
 const moon = icon('M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z');
 const chevron = icon('M6 9l6 6 6-6');
+
+// First-visit coachmark — points new users at the User guide nav link, once.
+// Dismissal is remembered per user on this device (localStorage).
+const guideHint = ref(false);
+const guideHintStyle = ref({});
+const guideHintKey = computed(() => `knit-guide-hint-seen:${user.value?.id ?? 'anon'}`);
+
+const positionGuideHint = () => {
+    const el = document.querySelector('[data-nav="/guide"]');
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    guideHintStyle.value = { top: `${Math.round(r.top + r.height / 2)}px`, left: `${Math.round(r.right + 14)}px` };
+};
+
+const dismissGuideHint = () => {
+    if (!guideHint.value) return;
+    guideHint.value = false;
+    try { localStorage.setItem(guideHintKey.value, '1'); } catch { /* ignore */ }
+    window.removeEventListener('resize', positionGuideHint);
+};
+
+onMounted(() => {
+    if (!user.value || page.url.startsWith('/guide')) return;
+    try { if (localStorage.getItem(guideHintKey.value) === '1') return; } catch { return; }
+    nextTick(() => setTimeout(() => {
+        if (!document.querySelector('[data-nav="/guide"]')) return;
+        positionGuideHint();
+        guideHint.value = true;
+        window.addEventListener('resize', positionGuideHint);
+    }, 650));
+});
+
+// Visiting the guide (by any route) counts as discovering it.
+watch(() => page.url, (url) => { if (url.startsWith('/guide')) dismissGuideHint(); });
+onBeforeUnmount(() => window.removeEventListener('resize', positionGuideHint));
 </script>
 
 <template>
@@ -194,9 +229,11 @@ const chevron = icon('M6 9l6 6 6-6');
                             v-for="item in section.items"
                             :key="item.label"
                             :href="item.href"
+                            :data-nav="item.href"
                             :class="[
                                 'group relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-[7px] text-[13px] font-medium transition-colors',
                                 isActive(item.href) ? 'brand-wash text-[var(--brand)]' : 'text-ink-soft hover:bg-sunken',
+                                guideHint && item.href === '/guide' ? 'guide-hint-target text-[var(--brand)]' : '',
                             ]"
                         >
                             <span v-if="isActive(item.href)" class="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r bg-[var(--brand)]" />
@@ -258,7 +295,54 @@ const chevron = icon('M6 9l6 6 6-6');
             </main>
         </div>
 
+        <!-- First-visit coachmark pointing at the User guide link -->
+        <Transition name="guide-hint">
+            <div v-if="guideHint" class="fixed z-40 hidden -translate-y-1/2 lg:block" :style="guideHintStyle">
+                <div class="relative w-[244px] rounded-[var(--radius-control)] border border-hairline bg-surface p-3.5 shadow-e2">
+                    <span class="absolute right-full top-1/2 -mr-[5px] -translate-y-1/2">
+                        <span class="block size-2.5 rotate-45 border-b border-l border-hairline bg-surface" />
+                    </span>
+                    <p class="text-[13px] font-semibold text-ink">New to Knit?</p>
+                    <p class="mt-1 text-[12px] leading-relaxed text-muted">
+                        Step-by-step help for every feature lives in the
+                        <span class="font-medium text-ink">User guide</span> — right here in the sidebar.
+                    </p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <Link
+                            href="/guide"
+                            class="rounded-[var(--radius-control)] bg-[var(--brand)] px-2.5 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                            @click="dismissGuideHint"
+                        >
+                            Open the guide
+                        </Link>
+                        <button
+                            class="rounded-[var(--radius-control)] px-2 py-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
+                            @click="dismissGuideHint"
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+
         <Toast />
         <CommandPalette :commands="commands" />
     </div>
 </template>
+
+<style scoped>
+/* Coachmark target — a gentle brand ring that breathes to draw the eye. */
+.guide-hint-target {
+    animation: guide-hint-pulse 1.8s ease-in-out infinite;
+}
+@keyframes guide-hint-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 45%, transparent); }
+    50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 12%, transparent); }
+}
+
+.guide-hint-enter-active { transition: opacity 0.3s ease, transform 0.3s ease; }
+.guide-hint-leave-active { transition: opacity 0.2s ease; }
+.guide-hint-enter-from { opacity: 0; transform: translateY(-50%) translateX(-6px); }
+.guide-hint-leave-to { opacity: 0; }
+</style>
