@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\NoteController;
 use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\AuditController;
@@ -75,6 +76,10 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
 
     // Collaboration — team activity feed (any workspace member)
     Route::get('/feed', [ActivityFeedController::class, 'index'])->name('feed.index');
+
+    // In-app user guide (how-to docs, any workspace member)
+    Route::get('/guide', [GuideController::class, 'index'])->name('guide.index');
+    Route::get('/guide/{slug}', [GuideController::class, 'show'])->name('guide.show');
 
     // Projects & tasks (kanban, subtasks, time tracking, file sharing)
     Route::middleware('permission:projects.view')->group(function () {
