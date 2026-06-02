@@ -1,0 +1,21 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - app
+
+    excludePaths:
+        - app/Modules/*/Tests/*
+
+    # The repo has no models yet (Phase 1+), so the tenancy trait is currently
+    # used zero times. PHPStan can't analyse an unused trait; this is expected
+    # until the first tenant-owned model lands.
+    ignoreErrors:
+        -
+            identifier: trait.unused
+            path: app/Support/Tenancy/BelongsToTenant.php
+
+    reportUnmatchedIgnoredErrors: false

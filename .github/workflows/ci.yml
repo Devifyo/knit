@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'phase/**']
+  pull_request:
+
+jobs:
+  quality:
+    name: Pint · PHPStan · Pest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, bcmath, intl, pdo_mysql, redis, gd, zip, pcntl, exif
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install & build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env || true
+          php artisan key:generate
+
+      - name: Lint (Pint)
+        run: composer lint:test
+
+      - name: Static analysis (PHPStan level 6)
+        run: composer analyse
+
+      - name: Tests (Pest)
+        run: php artisan test
