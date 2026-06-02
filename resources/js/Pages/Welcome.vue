@@ -87,7 +87,7 @@ const groupIcon = (i) => [
         </header>
 
         <!-- ============ HERO ============ -->
-        <section class="relative overflow-hidden px-5 pb-16 pt-32 lg:px-8 lg:pt-40">
+        <section class="relative overflow-hidden px-5 pb-8 pt-32 lg:px-8 lg:pt-40">
             <div class="pointer-events-none absolute inset-0 -z-10">
                 <div class="aurora aurora-a" :style="{ background: 'var(--brand)' }" />
                 <div class="aurora aurora-b" />
@@ -115,7 +115,8 @@ const groupIcon = (i) => [
             </div>
 
             <!-- Realistic product window -->
-            <div id="product" class="rise float mx-auto mt-16 max-w-[1040px]" style="animation-delay:.32s">
+            <div id="product" class="rise mx-auto mt-12 max-w-[1040px]" style="animation-delay:.32s">
+              <div class="float">
                 <div class="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-e3">
                     <div class="flex items-center gap-1.5 border-b border-hairline-soft px-4 py-2.5">
                         <span class="size-2.5 rounded-full bg-critical/50" /><span class="size-2.5 rounded-full bg-warning/50" /><span class="size-2.5 rounded-full bg-positive/50" />
@@ -156,11 +157,12 @@ const groupIcon = (i) => [
                         </div>
                     </div>
                 </div>
+              </div>
             </div>
         </section>
 
         <!-- ============ BENTO ============ -->
-        <section class="px-5 py-16 lg:px-8">
+        <section class="px-5 pb-16 pt-10 lg:px-8">
             <div class="mx-auto max-w-[1180px]">
                 <div v-reveal class="mb-10 max-w-2xl">
                     <p class="text-sm font-semibold text-[var(--brand)]">One connected system</p>
