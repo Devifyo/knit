@@ -157,14 +157,23 @@ const chevron = icon('M6 9l6 6 6-6');
 // First-visit coachmark — points new users at the User guide nav link, once.
 // Dismissal is remembered per user on this device (localStorage).
 const guideHint = ref(false);
+const guideHintCard = ref(null);
 const guideHintStyle = ref({});
+const guideHintArrowStyle = ref({});
 const guideHintKey = computed(() => `knit-guide-hint-seen:${user.value?.id ?? 'anon'}`);
 
+// Anchor the card beside the link, but clamp it inside the viewport (the link
+// sits near the bottom edge) and let the arrow track the link's true centre.
 const positionGuideHint = () => {
     const el = document.querySelector('[data-nav="/guide"]');
     if (!el) return;
     const r = el.getBoundingClientRect();
-    guideHintStyle.value = { top: `${Math.round(r.top + r.height / 2)}px`, left: `${Math.round(r.right + 14)}px` };
+    const margin = 10;
+    const cardH = guideHintCard.value?.offsetHeight || 150;
+    const linkCenter = r.top + r.height / 2;
+    const top = Math.max(margin, Math.min(linkCenter - cardH / 2, window.innerHeight - cardH - margin));
+    guideHintStyle.value = { top: `${Math.round(top)}px`, left: `${Math.round(r.right + 14)}px` };
+    guideHintArrowStyle.value = { top: `${Math.round(Math.max(14, Math.min(linkCenter - top, cardH - 14)))}px` };
 };
 
 const dismissGuideHint = () => {
@@ -179,8 +188,8 @@ onMounted(() => {
     try { if (localStorage.getItem(guideHintKey.value) === '1') return; } catch { return; }
     nextTick(() => setTimeout(() => {
         if (!document.querySelector('[data-nav="/guide"]')) return;
-        positionGuideHint();
         guideHint.value = true;
+        nextTick(positionGuideHint); // measure the rendered card, then place it
         window.addEventListener('resize', positionGuideHint);
     }, 650));
 });
@@ -297,9 +306,9 @@ onBeforeUnmount(() => window.removeEventListener('resize', positionGuideHint));
 
         <!-- First-visit coachmark pointing at the User guide link -->
         <Transition name="guide-hint">
-            <div v-if="guideHint" class="fixed z-40 hidden -translate-y-1/2 lg:block" :style="guideHintStyle">
-                <div class="relative w-[244px] rounded-[var(--radius-control)] border border-hairline bg-surface p-3.5 shadow-e2">
-                    <span class="absolute right-full top-1/2 -mr-[5px] -translate-y-1/2">
+            <div v-if="guideHint" class="fixed z-40 hidden lg:block" :style="guideHintStyle">
+                <div ref="guideHintCard" class="relative w-[244px] rounded-[var(--radius-control)] border border-hairline bg-surface p-3.5 shadow-e2">
+                    <span class="absolute right-full -mr-[5px] -translate-y-1/2" :style="guideHintArrowStyle">
                         <span class="block size-2.5 rotate-45 border-b border-l border-hairline bg-surface" />
                     </span>
                     <p class="text-[13px] font-semibold text-ink">New to Knit?</p>
@@ -343,6 +352,6 @@ onBeforeUnmount(() => window.removeEventListener('resize', positionGuideHint));
 
 .guide-hint-enter-active { transition: opacity 0.3s ease, transform 0.3s ease; }
 .guide-hint-leave-active { transition: opacity 0.2s ease; }
-.guide-hint-enter-from { opacity: 0; transform: translateY(-50%) translateX(-6px); }
+.guide-hint-enter-from { opacity: 0; transform: translateX(-6px); }
 .guide-hint-leave-to { opacity: 0; }
 </style>
