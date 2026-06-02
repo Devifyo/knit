@@ -9,7 +9,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    env_file: [.env]
     entrypoint: >
       sh -c "mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache &&
              chmod -R 777 storage bootstrap/cache 2>/dev/null;
@@ -27,7 +26,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    env_file: [.env]
     entrypoint: ["php", "artisan", "horizon"]
     networks: [knit]
     depends_on:
@@ -42,7 +40,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    env_file: [.env]
     entrypoint: ["php", "artisan", "schedule:work"]
     networks: [knit]
     depends_on:
@@ -57,7 +54,6 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    env_file: [.env]
     environment:
       REVERB_HOST: 0.0.0.0
       REVERB_PORT: 6001

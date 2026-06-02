@@ -123,5 +123,32 @@ migrations + the full Pest/Pint/PHPStan suite, commit on a `phase/N-*` branch,
 summarize, and **wait for approval** before the next phase. Never leave the repo
 broken.
 
-**Current status:** Phase 0 (Foundation) complete. Phase 1 (Tenancy, Auth, RBAC,
-White-label) is next and not yet started.
+## Tenancy & RBAC (Phase 1)
+
+- **Single-DB scoped tenancy** (`stancl/tenancy`): initializing a tenant only sets
+  the `tenant()` context (no DB/cache/queue switching — `tenancy.bootstrappers` is
+  empty). Row isolation = `App\Support\Tenancy\TenantScope` via `BelongsToTenant`.
+- **Resolution** (`App\Http\Middleware\ResolveTenant`, alias `tenant`): custom
+  domain (full host in `domains`) → subdomain slug → authenticated user's
+  `tenant_id`. It runs *before* `SubstituteBindings` (priority list) so scoped
+  route bindings 404 across tenants, and pins the spatie permissions team.
+- **RBAC**: `spatie/laravel-permission` with **teams keyed by `tenant_id`**. Roles:
+  Owner/Admin/Manager/Agent (`App\Modules\Admin\Services\Rbac`). Owners bypass all
+  gates (`Gate::before`). Field-level perms via `FieldPermissionService`.
+- **Signup** provisions a workspace via `WorkspaceProvisioner` (tenant + subdomain
+  + roles/permissions + owner user). Auth is **Fortify** (login/register/reset/2FA)
+  with Inertia pages under `resources/js/Pages/Auth`.
+
+### Demo data (after `php artisan migrate:fresh --seed`)
+- `owner@acme.test` / `password` — Owner of *Acme Inc.*
+- `agent@acme.test` / `password` — Agent of *Acme Inc.* (limited perms)
+- `owner@globex.test` / `password` — Owner of *Globex*
+
+### Tests
+Run against a dedicated **MySQL `knit_test`** database (not sqlite — for schema
+parity). Config comes from `.env.testing` (loaded because `APP_ENV=testing`). The
+PHP containers do **not** use Docker `env_file`; Laravel reads `.env` / `.env.testing`
+directly, so the test env isn't clobbered by container env vars.
+
+**Current status:** Phase 0 + Phase 1 complete (17 Pest tests green). Phase 2
+(Core CRM) is next and not yet started.

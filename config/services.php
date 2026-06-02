@@ -40,7 +40,7 @@ return [
     'gemini' => [
         'enabled' => env('AI_ENABLED', false),
         'key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
     ],
 
 ];

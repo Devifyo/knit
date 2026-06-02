@@ -18,21 +18,26 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
+        <!--
+          force="true" overrides the Docker-injected runtime env (DB/cache/etc.
+          come from env_file at container start, which otherwise wins over these).
+          Tests run against a dedicated MySQL database for prod schema parity.
+        -->
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="BROADCAST_CONNECTION" value="null" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <env name="DB_HOST" value="db" force="true"/>
+        <env name="DB_PORT" value="3306" force="true"/>
+        <env name="DB_DATABASE" value="knit_test" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
-        <env name="INERTIA_TESTING_ENSURE_PAGES_EXIST" value="false"/>
-        <env name="REDIS_CLIENT" value="phpredis"/>
+        <env name="INERTIA_TESTING_ENSURE_PAGES_EXIST" value="false" force="true"/>
     </php>
 </phpunit>

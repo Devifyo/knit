@@ -41,21 +41,16 @@ Broadcast::channel('presence-tenant.{tenantId}.chat.{channelId}', function ($use
 });
 
 /**
- * Confirm a user belongs to the given tenant.
+ * Confirm a user belongs to the given tenant. Compares the user's own
+ * tenant_id, so it works on the /broadcasting/auth route without depending on
+ * the tenant-resolution middleware having run.
  *
- * Phase 0 stub: returns true when a tenant context is active and matches.
- * Phase 1 replaces this with a real membership lookup once the Tenant <-> User
- * relationship and BelongsToTenant scoping are in place.
- *
- * Guarded because channels.php is re-required each time the app boots (e.g. once
- * per test), which would otherwise redeclare the function.
+ * Guarded because channels.php is re-required each time the app boots (e.g.
+ * once per test), which would otherwise redeclare the function.
  */
 if (! function_exists('userBelongsToTenant')) {
     function userBelongsToTenant($user, string $tenantId): bool
     {
-        $current = function_exists('tenant') ? tenant() : null;
-
-        return $user !== null && $current !== null
-            && (string) $current->getTenantKey() === $tenantId;
+        return $user !== null && (string) $user->tenant_id === $tenantId;
     }
 }

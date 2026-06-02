@@ -17,19 +17,28 @@ CI; UI component library + layouts + demo Inertia page; docs (`CLAUDE.md`,
 **Acceptance:** app boots via nginx, Vite HMR works, Reverb + Horizon run, demo
 components render, CI green. ✔
 
-## 🔜 Phase 1 — Tenancy, Auth, RBAC, White-Label
-Tenant resolution (subdomain + custom domain), signup/onboarding, workspace
-provisioning (default roles, pipelines, ticket statuses, email templates, owner
-user), Fortify auth, 2FA, SSO (OAuth), `spatie/laravel-permission` with custom
-roles + team hierarchy + **field-level permissions**, audit + activity logs,
-white-label (branding, logo, theme colors, custom domain, email branding), tenant
-settings, real-time notifications channel.
+## ✅ Phase 1 — Tenancy, Auth, RBAC, White-Label
+Single-DB scoped tenancy (`stancl/tenancy`), tenant resolution by custom domain →
+subdomain slug → authenticated-user fallback (`ResolveTenant` middleware),
+signup/onboarding that provisions a workspace (roles/permissions + owner user +
+subdomain), Fortify auth + 2FA (Inertia auth pages), `spatie/laravel-permission`
+with **teams scoped by `tenant_id`** (Owner/Admin/Manager/Agent) + **field-level
+permissions**, audit (`owen-it/laravel-auditing`) + activity log
+(`spatie/laravel-activitylog`), white-label branding (name/color/logo) applied
+live via shared Inertia props + CSS vars, real-time notifications
+(`tenant.{id}.notifications` → Reverb → toast).
 
-**Acceptance:** cross-tenant isolation test passes; a non-owner role is denied
-restricted actions; custom domain resolves to the right tenant; theme changes
-apply live.
+**Acceptance — all met (17 Pest tests):** cross-tenant isolation (index returns
+only own rows; direct ID access 404s); a non-owner (Agent) is denied
+`members.view`; custom domain + subdomain resolve the right tenant; theme changes
+apply live. Pint + PHPStan L6 + Pest all green.
 
-## ⬜ Phase 2 — Core CRM
+Deferred to their phases (tables don't exist yet): default pipelines (Phase 2),
+ticket statuses (Phase 5), email templates (Phase 6). SSO/OAuth providers scaffolded
+behind Fortify but real provider wiring lands with the integrations work (Phase 10).
+
+## 🔜 Phase 2 — Core CRM (next)
+
 Contacts, Companies, Leads, Pipelines/Stages, Deals (drag-drop kanban with live
 Reverb updates), Accounts (parent-child, health, contracts, renewals). Custom
 fields, tags/segmentation, polymorphic timeline, dedupe, global search, saved

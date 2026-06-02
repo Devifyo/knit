@@ -26,7 +26,7 @@ class GeminiService
     public function __construct(
         protected readonly bool $enabled = false,
         protected readonly ?string $apiKey = null,
-        protected readonly string $model = 'gemini-2.0-flash',
+        protected readonly string $model = 'gemini-2.5-flash',
     ) {}
 
     /** @return array{score:int, reasons:array<int,string>} */

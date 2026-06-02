@@ -35,18 +35,22 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
 
             'auth' => [
-                'user' => $request->user()
-                    ? $request->user()->only('id', 'name', 'email')
-                    : null,
+                'user' => $request->user() ? [
+                    ...$request->user()->only('id', 'name', 'email'),
+                    'roles' => $request->user()->getRoleNames(),
+                    'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                ] : null,
             ],
 
-            // Current workspace (tenant). Null on central/landlord routes.
+            // Current workspace (tenant) + white-label branding. Null on central
+            // routes (signup/login).
             'tenant' => function () {
                 $tenant = function_exists('tenant') ? tenant() : null;
 
                 return $tenant ? [
                     'id' => $tenant->getTenantKey(),
-                    'name' => $tenant->name ?? null,
+                    'name' => $tenant->name,
+                    'branding' => $tenant->branding(),
                 ] : null;
             },
 

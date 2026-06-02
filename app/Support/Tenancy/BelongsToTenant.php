@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Tenancy;
 
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Stancl\Tenancy\Database\Models\Tenant;
 
 /**
  * Applied to every tenant-owned model. It:
@@ -40,8 +40,14 @@ trait BelongsToTenant
         return 'tenant_id';
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo(config('tenancy.tenant_model', Tenant::class), $this->getTenantColumn());
+        /** @var class-string<Tenant> $model */
+        $model = config('tenancy.tenant_model', Tenant::class);
+
+        return $this->belongsTo($model, $this->getTenantColumn());
     }
 }
