@@ -8,6 +8,7 @@ use App\Modules\Admin\Http\Controllers\BrandingController;
 use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\AI\Http\Controllers\MeetingController;
+use App\Modules\Analytics\Http\Controllers\ActivityFeedController;
 use App\Modules\Analytics\Http\Controllers\DashboardController;
 use App\Modules\Analytics\Http\Controllers\ReportController;
 use App\Modules\Automation\Http\Controllers\TaskController;
@@ -25,6 +26,7 @@ use App\Modules\Marketing\Http\Controllers\CampaignController;
 use App\Modules\Marketing\Http\Controllers\FormController;
 use App\Modules\Marketing\Http\Controllers\FormPublicController;
 use App\Modules\Marketing\Http\Controllers\TrackingController;
+use App\Modules\Projects\Http\Controllers\ProjectController;
 use App\Modules\Support\Http\Controllers\HelpController;
 use App\Modules\Support\Http\Controllers\KbController;
 use App\Modules\Support\Http\Controllers\SupportWebhookController;
@@ -68,6 +70,23 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // Analytics — custom report builder + exports
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:analytics.view')->name('reports.index');
     Route::get('/reports/export/{format}', [ReportController::class, 'export'])->middleware('permission:reports.export')->name('reports.export');
+
+    // Collaboration — team activity feed (any workspace member)
+    Route::get('/feed', [ActivityFeedController::class, 'index'])->name('feed.index');
+
+    // Projects & tasks (kanban, subtasks, time tracking, file sharing)
+    Route::middleware('permission:projects.view')->group(function () {
+        Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+        Route::get('/projects/{project}/files/{media}', [ProjectController::class, 'downloadFile'])->name('projects.files.download');
+    });
+    Route::middleware('permission:projects.manage')->group(function () {
+        Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+        Route::post('/projects/{project}/tasks', [ProjectController::class, 'storeTask'])->name('projects.tasks.store');
+        Route::patch('/project-tasks/{task}/move', [ProjectController::class, 'moveTask'])->name('projects.tasks.move');
+        Route::post('/project-tasks/{task}/time', [ProjectController::class, 'logTime'])->name('projects.tasks.time');
+        Route::post('/projects/{project}/files', [ProjectController::class, 'uploadFile'])->name('projects.files.upload');
+    });
 
     // Contacts
     Route::middleware('permission:contacts.view')->group(function () {

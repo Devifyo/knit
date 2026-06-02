@@ -17,6 +17,7 @@ use App\Models\Lead;
 use App\Models\Note;
 use App\Models\Pipeline;
 use App\Models\Product;
+use App\Models\Project;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Models\User;
@@ -187,6 +188,38 @@ class DatabaseSeeder extends Seeder
                 'body' => '<p>Hi there — here is what we shipped this month.</p>', 'cta_label' => 'Read more',
                 'cta_url' => 'https://example.com', 'audience' => 'contacts', 'status' => 'draft',
             ]);
+
+            // Phase 9 — a shared project with a populated kanban board, subtasks,
+            // logged time and an attached brief so the workspace looks lived-in.
+            $project = Project::create([
+                'name' => 'Customer onboarding revamp',
+                'description' => 'Redesign the first-run experience to cut time-to-value for new customers.',
+                'owner_id' => $owner->id,
+            ]);
+            $teammate = $tenant->users()->where('id', '!=', $owner->id)->first() ?? $owner;
+            $board = [
+                ['Audit current onboarding flow', 'done', $owner->id, [['List drop-off steps', 'done'], ['Pull funnel metrics', 'done']]],
+                ['Draft new welcome checklist', 'doing', $teammate->id, [['Write copy', 'doing'], ['Design empty states', 'todo']]],
+                ['Wire in-app product tour', 'todo', $teammate->id, []],
+                ['Set up activation email series', 'todo', $owner->id, []],
+            ];
+            foreach ($board as $pos => [$title, $status, $assignee, $subs]) {
+                $task = $project->allTasks()->create([
+                    'title' => $title, 'status' => $status, 'assigned_user_id' => $assignee, 'position' => $pos,
+                ]);
+                foreach ($subs as $sp => [$subTitle, $subStatus]) {
+                    $project->allTasks()->create([
+                        'title' => $subTitle, 'status' => $subStatus, 'parent_id' => $task->id,
+                        'assigned_user_id' => $assignee, 'position' => $sp,
+                    ]);
+                }
+                if ($status !== 'todo') {
+                    $task->timeEntries()->create([
+                        'user_id' => $assignee, 'minutes' => 45 + $pos * 30,
+                        'note' => 'Initial pass', 'logged_at' => now()->subDays($pos),
+                    ]);
+                }
+            }
 
             tenancy()->end();
         }

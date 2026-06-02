@@ -49,6 +49,8 @@ const icons = {
     campaigns: icon('M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'),
     forms: icon('M9 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-3M9 14h6M9 17h6M9 4a2 2 0 002 2h2a2 2 0 002-2'),
     reports: icon('M3 3v18h18M7 13l3-3 3 3 5-6'),
+    projects: icon('M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z'),
+    feed: icon('M4 4h16M4 9h10M4 14h16M4 19h10'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
@@ -75,6 +77,10 @@ const groups = [
     { label: 'Marketing', items: [
         { label: 'Campaigns', href: '/campaigns', icon: 'campaigns' },
         { label: 'Forms', href: '/forms', icon: 'forms' },
+    ] },
+    { label: 'Collaborate', items: [
+        { label: 'Projects', href: '/projects', icon: 'projects' },
+        { label: 'Activity feed', href: '/feed', icon: 'feed' },
     ] },
     { label: 'Automate', items: [
         { label: 'Tasks', href: '/tasks', icon: 'tasks' },
