@@ -31,7 +31,10 @@ class LeadController extends Controller
                 'converted' => $l->isConverted(),
             ])->all();
 
-        return Inertia::render('Leads/Index', ['leads' => $leads]);
+        return Inertia::render('Leads/Index', [
+            'leads' => $leads,
+            'captureUrl' => url('/f/'.tenant('slug')),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

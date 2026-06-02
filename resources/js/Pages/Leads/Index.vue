@@ -4,8 +4,10 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { Button, Input, DataTable, Tag, Modal } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
-defineProps({ leads: Array });
+const props = defineProps({ leads: Array, captureUrl: String });
 const { can } = usePermissions();
+
+const copyCapture = () => navigator.clipboard?.writeText(props.captureUrl);
 
 const open = ref(false);
 const form = useForm({ name: '', email: '', phone: '', source: '' });
@@ -33,6 +35,13 @@ const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'posit
                 <p class="mt-1 text-sm text-muted">Capture, qualify and convert</p>
             </div>
             <Button v-if="can('leads.manage')" @click="open = true">Capture lead</Button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm shadow-e1">
+            <span class="text-muted">Public capture form:</span>
+            <a :href="captureUrl" target="_blank" class="font-mono text-[var(--brand)] hover:underline">{{ captureUrl }}</a>
+            <button class="ml-auto rounded-md px-2 py-1 text-xs text-ink-soft ring-1 ring-hairline hover:bg-sunken" @click="copyCapture">Copy link</button>
+            <span class="text-xs text-faint">Submissions create a lead and fire your <code>lead.created</code> workflows.</span>
         </div>
 
         <DataTable :columns="columns" :rows="leads" empty-title="No leads yet" empty-description="Capture your first lead to start the pipeline.">

@@ -99,6 +99,14 @@ class QuoteController extends Controller
         return back()->with('success', 'Item added.');
     }
 
+    public function status(Request $request, Quote $quote): RedirectResponse
+    {
+        $data = $request->validate(['status' => ['required', 'in:draft,sent,accepted,declined']]);
+        $quote->update(['status' => $data['status']]);
+
+        return back()->with('success', "Quote marked {$data['status']}.");
+    }
+
     public function pdf(Quote $quote): Response
     {
         $quote->load('items');

@@ -17,9 +17,12 @@ createInertiaApp({
             `./Pages/${name}.vue`,
             import.meta.glob('./Pages/**/*.vue'),
         );
-        // Default every page to AppLayout unless it declares its own.
+        // Default every page to AppLayout unless it declares its own
+        // (a page may set `layout: null` to render standalone, e.g. public pages).
         page.then((module) => {
-            module.default.layout = module.default.layout ?? AppLayout;
+            if (module.default.layout === undefined) {
+                module.default.layout = AppLayout;
+            }
         });
         return page;
     },

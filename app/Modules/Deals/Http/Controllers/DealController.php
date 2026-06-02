@@ -8,7 +8,9 @@ use App\Events\DealStageChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Deal;
 use App\Models\Pipeline;
+use App\Models\Quote;
 use App\Models\Stage;
+use App\Modules\Deals\Services\PricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +18,37 @@ use Inertia\Response;
 
 class DealController extends Controller
 {
+    public function __construct(protected PricingService $pricing) {}
+
+    public function show(Deal $deal): Response
+    {
+        $deal->load(['contact:id,first_name,last_name', 'company:id,name', 'owner:id,name', 'stage:id,name', 'quotes', 'activities.user:id,name']);
+
+        return Inertia::render('Deals/Show', [
+            'deal' => [
+                'id' => $deal->id,
+                'name' => $deal->name,
+                'amount' => $deal->formattedAmount(),
+                'status' => $deal->status,
+                'stage' => $deal->stage?->name,
+                'probability' => $deal->probability,
+                'expected_close_date' => $deal->expected_close_date?->toFormattedDateString(),
+                'contact' => $deal->contact?->name,
+                'contact_id' => $deal->contact_id,
+                'company' => $deal->company?->name,
+                'owner' => $deal->owner?->name,
+                'quotes' => $deal->quotes->map(fn (Quote $q) => [
+                    'id' => $q->id, 'number' => $q->number, 'status' => $q->status,
+                    'total' => $this->pricing->totals($q)['total_formatted'],
+                ]),
+                'activities' => $deal->activities->map(fn ($a) => [
+                    'id' => $a->id, 'type' => $a->type, 'body' => $a->body,
+                    'author' => $a->user?->name, 'at' => $a->created_at?->diffForHumans(),
+                ]),
+            ],
+        ]);
+    }
+
     public function index(Request $request): Response
     {
         $pipeline = Pipeline::with('stages')

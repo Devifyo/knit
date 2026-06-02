@@ -10,6 +10,7 @@ use Database\Factories\DealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable;
@@ -75,5 +76,11 @@ class Deal extends Model implements AuditableContract, TenantOwned
     public function activities(): MorphMany
     {
         return $this->morphMany(Activity::class, 'subject')->latest();
+    }
+
+    /** @return HasMany<Quote, $this> */
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class)->latest();
     }
 }

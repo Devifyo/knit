@@ -13,6 +13,7 @@ use App\Modules\Contacts\Http\Controllers\CompanyController;
 use App\Modules\Contacts\Http\Controllers\ContactController;
 use App\Modules\Deals\Http\Controllers\DealController;
 use App\Modules\Deals\Http\Controllers\QuoteController;
+use App\Modules\Leads\Http\Controllers\LeadCaptureController;
 use App\Modules\Leads\Http\Controllers\LeadController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,6 +25,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 })->name('home');
+
+// Public, per-workspace lead capture form (no auth). Feeds the automation engine.
+Route::get('/f/{slug}', [LeadCaptureController::class, 'show'])->name('lead-capture.show');
+Route::post('/f/{slug}', [LeadCaptureController::class, 'submit'])->name('lead-capture.submit');
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -49,6 +54,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Deals
     Route::get('/deals', [DealController::class, 'index'])->middleware('permission:deals.view')->name('deals.index');
+    Route::get('/deals/{deal}', [DealController::class, 'show'])->middleware('permission:deals.view')->name('deals.show');
     Route::post('/deals', [DealController::class, 'store'])->middleware('permission:deals.manage')->name('deals.store');
     Route::patch('/deals/{deal}/move', [DealController::class, 'move'])->middleware('permission:deals.manage')->name('deals.move');
 
@@ -57,8 +63,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     // Automation — workflows
     Route::get('/workflows', [WorkflowController::class, 'index'])->middleware('permission:workflows.view')->name('workflows.index');
-    Route::post('/workflows', [WorkflowController::class, 'store'])->middleware('permission:workflows.manage')->name('workflows.store');
-    Route::patch('/workflows/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:workflows.manage')->name('workflows.toggle');
+    Route::middleware('permission:workflows.manage')->group(function () {
+        Route::get('/workflows/create', [WorkflowController::class, 'create'])->name('workflows.create');
+        Route::post('/workflows', [WorkflowController::class, 'store'])->name('workflows.store');
+        Route::get('/workflows/{workflow}/edit', [WorkflowController::class, 'edit'])->name('workflows.edit');
+        Route::put('/workflows/{workflow}', [WorkflowController::class, 'update'])->name('workflows.update');
+        Route::patch('/workflows/{workflow}/toggle', [WorkflowController::class, 'toggle'])->name('workflows.toggle');
+        Route::delete('/workflows/{workflow}', [WorkflowController::class, 'destroy'])->name('workflows.destroy');
+    });
 
     // Tasks
     Route::get('/tasks', [TaskController::class, 'index'])->middleware('permission:tasks.view')->name('tasks.index');
@@ -71,6 +83,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->middleware('permission:quotes.view')->name('quotes.pdf');
     Route::post('/quotes', [QuoteController::class, 'store'])->middleware('permission:quotes.manage')->name('quotes.store');
     Route::post('/quotes/{quote}/items', [QuoteController::class, 'addItem'])->middleware('permission:quotes.manage')->name('quotes.items');
+    Route::patch('/quotes/{quote}/status', [QuoteController::class, 'status'])->middleware('permission:quotes.manage')->name('quotes.status');
 
     // Notes (Phase 1 demo resource)
     Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');

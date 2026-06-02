@@ -1,8 +1,11 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button, Card, Input, DataTable } from '@/Components/ui';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Button, Card, Input, DataTable, Tag } from '@/Components/ui';
 
 const props = defineProps({ quote: Object, totals: Object, products: Array });
+
+const setStatus = (status) => router.patch(`/quotes/${props.quote.id}/status`, { status }, { preserveScroll: true });
+const statusColor = (s) => ({ draft: 'neutral', sent: 'info', accepted: 'positive', declined: 'critical' }[s] ?? 'neutral');
 
 const item = useForm({ name: '', quantity: 1, unit_price: '', discount_pct: 0 });
 const addItem = () => item.post(`/quotes/${props.quote.id}/items`, { preserveScroll: true, onSuccess: () => item.reset() });
@@ -28,9 +31,16 @@ const money = (minor) => (minor / 100).toFixed(2);
         <div class="flex items-center justify-between gap-3">
             <div>
                 <Link href="/quotes" class="text-sm text-muted hover:text-ink-soft">← Quotes</Link>
-                <h1 class="mt-1 text-xl font-semibold tracking-[-0.02em] text-ink nums">{{ quote.number }}</h1>
+                <div class="mt-1 flex items-center gap-2">
+                    <h1 class="text-xl font-semibold tracking-[-0.02em] text-ink nums">{{ quote.number }}</h1>
+                    <Tag :color="statusColor(quote.status)" size="sm">{{ quote.status }}</Tag>
+                </div>
             </div>
-            <Button :href="`/quotes/${quote.id}/pdf`">Download PDF</Button>
+            <div class="flex items-center gap-2">
+                <Button v-if="quote.status === 'draft'" variant="secondary" @click="setStatus('sent')">Mark sent</Button>
+                <Button v-if="quote.status === 'sent'" variant="secondary" @click="setStatus('accepted')">Mark accepted</Button>
+                <Button :href="`/quotes/${quote.id}/pdf`">Download PDF</Button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">

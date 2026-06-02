@@ -1,0 +1,65 @@
+<script setup>
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Card, Tag, Button } from '@/Components/ui';
+
+const props = defineProps({ deal: Object });
+
+const newQuote = useForm({ deal_id: props.deal.id, currency: 'USD', tax_rate: 0 });
+const createQuote = () => newQuote.post('/quotes');
+
+const statusColor = (s) => ({ open: 'info', won: 'positive', lost: 'critical' }[s] ?? 'neutral');
+const qStatusColor = (s) => ({ draft: 'neutral', sent: 'info', accepted: 'positive', declined: 'critical' }[s] ?? 'neutral');
+</script>
+
+<template>
+    <Head :title="deal.name" />
+    <div class="space-y-5">
+        <div>
+            <Link href="/deals" class="text-sm text-muted hover:text-ink-soft">← Pipeline</Link>
+            <div class="mt-1 flex items-center gap-3">
+                <h1 class="text-xl font-semibold tracking-[-0.02em] text-ink">{{ deal.name }}</h1>
+                <Tag :color="statusColor(deal.status)" size="sm">{{ deal.status }}</Tag>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
+            <Card title="Deal">
+                <dl class="space-y-2.5 text-sm">
+                    <div class="flex justify-between"><dt class="text-muted">Amount</dt><dd class="nums text-ink">{{ deal.amount }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muted">Stage</dt><dd><Tag size="sm" color="brand">{{ deal.stage }}</Tag></dd></div>
+                    <div class="flex justify-between"><dt class="text-muted">Probability</dt><dd class="text-ink-soft">{{ deal.probability ?? '—' }}%</dd></div>
+                    <div class="flex justify-between"><dt class="text-muted">Close date</dt><dd class="text-ink-soft">{{ deal.expected_close_date ?? '—' }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-muted">Contact</dt><dd class="truncate text-ink-soft"><Link v-if="deal.contact_id" :href="`/contacts/${deal.contact_id}`" class="text-[var(--brand)] hover:underline">{{ deal.contact }}</Link><span v-else>—</span></dd></div>
+                    <div class="flex justify-between"><dt class="text-muted">Company</dt><dd class="text-ink-soft">{{ deal.company ?? '—' }}</dd></div>
+                    <div class="flex justify-between"><dt class="text-muted">Owner</dt><dd class="text-ink-soft">{{ deal.owner ?? '—' }}</dd></div>
+                </dl>
+            </Card>
+
+            <div class="space-y-5">
+                <Card title="Quotes" subtitle="Proposals attached to this deal">
+                    <template #header><Button size="sm" :loading="newQuote.processing" @click="createQuote">Create quote</Button></template>
+                    <ul v-if="deal.quotes.length" class="divide-y divide-hairline-soft">
+                        <li v-for="q in deal.quotes" :key="q.id" class="flex items-center justify-between py-2.5">
+                            <Link :href="`/quotes/${q.id}`" class="font-mono text-sm text-[var(--brand)] hover:underline">{{ q.number }}</Link>
+                            <div class="flex items-center gap-3">
+                                <span class="nums text-sm text-ink">{{ q.total }}</span>
+                                <Tag size="sm" :color="qStatusColor(q.status)">{{ q.status }}</Tag>
+                            </div>
+                        </li>
+                    </ul>
+                    <p v-else class="text-sm text-muted">No quotes yet — create one to build a proposal and export a PDF.</p>
+                </Card>
+
+                <Card title="Activity">
+                    <ol v-if="deal.activities.length" class="space-y-3">
+                        <li v-for="a in deal.activities" :key="a.id" class="flex items-start gap-2">
+                            <Tag size="sm" color="neutral">{{ a.type }}</Tag>
+                            <div><p v-if="a.body" class="text-sm text-ink-soft">{{ a.body }}</p><p class="text-xs text-faint">{{ a.author || 'System' }} · {{ a.at }}</p></div>
+                        </li>
+                    </ol>
+                    <p v-else class="text-sm text-muted">No activity yet.</p>
+                </Card>
+            </div>
+        </div>
+    </div>
+</template>

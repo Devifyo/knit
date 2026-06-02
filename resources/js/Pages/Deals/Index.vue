@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Button, Kanban, Avatar, Modal, Input } from '@/Components/ui';
 import { useTenant } from '@/Composables/useTenant';
 import { useEcho } from '@/Composables/useEcho';
@@ -60,12 +60,14 @@ const submit = () => form.post('/deals', { preserveScroll: true, onSuccess: () =
 
         <Kanban :columns="board" @card-moved="onCardMoved">
             <template #card="{ card }">
-                <p class="text-sm font-medium text-ink">{{ card.title }}</p>
-                <p v-if="card.company" class="mt-0.5 text-xs text-muted">{{ card.company }}</p>
-                <div class="mt-2.5 flex items-center justify-between">
-                    <span class="nums text-[13px] font-medium text-ink">{{ card.amount }}</span>
-                    <Avatar v-if="card.owner" :name="card.owner" size="sm" />
-                </div>
+                <Link :href="`/deals/${card.id}`" class="block">
+                    <p class="text-sm font-medium text-ink hover:text-[var(--brand)]">{{ card.title }}</p>
+                    <p v-if="card.company" class="mt-0.5 text-xs text-muted">{{ card.company }}</p>
+                    <div class="mt-2.5 flex items-center justify-between">
+                        <span class="nums text-[13px] font-medium text-ink">{{ card.amount }}</span>
+                        <Avatar v-if="card.owner" :name="card.owner" size="sm" />
+                    </div>
+                </Link>
             </template>
         </Kanban>
 
