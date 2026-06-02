@@ -53,6 +53,8 @@ final class Rbac
             'inbox.view', 'inbox.manage', 'chat.use',
             // Support
             'tickets.view', 'tickets.manage', 'kb.manage',
+            // Marketing
+            'marketing.view', 'marketing.manage',
         ];
     }
 
@@ -83,6 +85,7 @@ final class Rbac
                 'quotes.view', 'quotes.manage',
                 'inbox.view', 'inbox.manage', 'chat.use',
                 'tickets.view', 'tickets.manage', 'kb.manage',
+                'marketing.view', 'marketing.manage',
             ],
             self::AGENT => [
                 'notes.view', 'notes.create',

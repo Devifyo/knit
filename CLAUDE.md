@@ -206,5 +206,17 @@ registered in `bootstrap/app.php` withCommands) — it loops tenants and escalat
 SLA-breached tickets idempotently. Public: `POST /webhooks/support/{slug}` intake
 and the self-service portal `/help/{slug}` (KB + AI chatbot via `GeminiService`).
 
-**Current status:** Phases 0–5 complete (49 Pest tests green). Phase 6 (Marketing
-Automation) is next and not yet started.
+## Marketing (Phase 6)
+
+`App\Modules\Marketing`: `Campaign` + `CampaignRecipient` (A/B variant, per-recipient
+token), `Form` + `FormSubmission`. `SendCampaignJob` (queued, tenant-aware) builds
+recipients and emails a 1×1 open pixel + click-wrapped CTA; public
+`/track/open|click/{token}` record opens/clicks for the campaign analytics page.
+`FormIntakeService` turns a public `/forms/{slug}` submission into a linked `Lead`
+and calls `WorkflowEngine::startWorkflow()` to enrol it into the form's nurture
+sequence (use trigger `manual` for nurture-only workflows to avoid double-firing
+with `lead.created`). SMS/WhatsApp via the `MessagingChannel` adapter
+(`LogMessagingChannel` stub).
+
+**Current status:** Phases 0–6 complete (53 Pest tests green). Phase 7 (AI Layer)
+is next and not yet started.

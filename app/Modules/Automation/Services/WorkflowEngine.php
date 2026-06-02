@@ -27,19 +27,31 @@ class WorkflowEngine
         $workflows = Workflow::where('trigger_event', $event)->where('enabled', true)->with('steps')->get();
 
         foreach ($workflows as $workflow) {
-            if ($workflow->steps->isEmpty()) {
-                continue;
-            }
-
-            $run = WorkflowRun::create([
-                'workflow_id' => $workflow->id,
-                'subject_type' => $subject::class,
-                'subject_id' => $subject->getKey(),
-                'status' => 'running',
-                'current_step' => 0,
-            ]);
-
-            RunWorkflowJob::dispatch($run->tenant_id, $run->id);
+            $this->startWorkflow($workflow, $subject);
         }
+    }
+
+    /**
+     * Explicitly enrol a subject into a specific workflow (e.g. a form's nurture
+     * sequence), regardless of the workflow's trigger. Returns null for an empty
+     * workflow.
+     */
+    public function startWorkflow(Workflow $workflow, Model $subject): ?WorkflowRun
+    {
+        if ($workflow->steps()->count() === 0) {
+            return null;
+        }
+
+        $run = WorkflowRun::create([
+            'workflow_id' => $workflow->id,
+            'subject_type' => $subject::class,
+            'subject_id' => $subject->getKey(),
+            'status' => 'running',
+            'current_step' => 0,
+        ]);
+
+        RunWorkflowJob::dispatch($run->tenant_id, $run->id);
+
+        return $run;
     }
 }

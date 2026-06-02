@@ -19,6 +19,10 @@ use App\Modules\Deals\Http\Controllers\DealController;
 use App\Modules\Deals\Http\Controllers\QuoteController;
 use App\Modules\Leads\Http\Controllers\LeadCaptureController;
 use App\Modules\Leads\Http\Controllers\LeadController;
+use App\Modules\Marketing\Http\Controllers\CampaignController;
+use App\Modules\Marketing\Http\Controllers\FormController;
+use App\Modules\Marketing\Http\Controllers\FormPublicController;
+use App\Modules\Marketing\Http\Controllers\TrackingController;
 use App\Modules\Support\Http\Controllers\HelpController;
 use App\Modules\Support\Http\Controllers\KbController;
 use App\Modules\Support\Http\Controllers\SupportWebhookController;
@@ -28,7 +32,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'phase' => 'Phase 5 — Customer Support',
+        'phase' => 'Phase 6 — Marketing Automation',
         'laravelVersion' => app()->version(),
         'phpVersion' => PHP_VERSION,
     ]);
@@ -49,6 +53,12 @@ Route::post('/webhooks/mail/{slug}', InboundWebhookController::class)->name('web
 Route::post('/webhooks/support/{slug}', SupportWebhookController::class)->name('webhooks.support');
 Route::get('/help/{slug}', [HelpController::class, 'show'])->name('help.show');
 Route::post('/help/{slug}/ask', [HelpController::class, 'ask'])->name('help.ask');
+
+// Public marketing: landing-page forms + email open/click tracking.
+Route::get('/forms/{slug}', [FormPublicController::class, 'show'])->name('forms.public');
+Route::post('/forms/{slug}', [FormPublicController::class, 'submit'])->name('forms.submit');
+Route::get('/track/open/{token}', [TrackingController::class, 'open'])->name('track.open');
+Route::get('/track/click/{token}', [TrackingController::class, 'click'])->name('track.click');
 
 Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -116,6 +126,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/kb', [KbController::class, 'index'])->name('kb.index');
         Route::post('/kb', [KbController::class, 'store'])->name('kb.store');
         Route::delete('/kb/{article}', [KbController::class, 'destroy'])->name('kb.destroy');
+    });
+
+    // Marketing — campaigns + forms
+    Route::middleware('permission:marketing.view')->group(function () {
+        Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
+        Route::get('/forms', [FormController::class, 'index'])->name('forms.index');
+    });
+    Route::middleware('permission:marketing.manage')->group(function () {
+        Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
+        Route::post('/campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
+        Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
     });
 
     // Automation — workflows

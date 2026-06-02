@@ -108,12 +108,23 @@ portal** (`/help/{slug}`) and an **AI chatbot** answering from KB via `GeminiSer
 triggers **escalation** (verified live: the scheduled command escalated the seeded
 overdue ticket to urgent). Pint + PHPStan L6 green. VoIP/video remain adapter stubs (Phase 10).
 
-## 🔜 Phase 6 — Marketing Automation (next)
-Email marketing (campaign + TipTap editor, sequences, drip, A/B, open/click
-analytics), landing page/funnel/form builder, SMS & WhatsApp, social scheduling +
-inbox.
+## ✅ Phase 6 — Marketing Automation
+Email **campaigns** (`App\Modules\Marketing`): HTML body + **A/B subject**, audience
+(contacts/leads), `SendCampaignJob` (queued, tenant-aware) creates a tracked
+`CampaignRecipient` per person with a 1×1 **open pixel** + click-wrapped **CTA**;
+public `/track/open|click/{token}` feed **open/click analytics** (+ A/B open-rate
+breakdown). **Landing-page form builder**: public `/forms/{slug}` whose submissions
+`FormIntakeService` turns into a **linked Lead** that is **auto-enrolled into a
+nurture sequence** (Phase-3 engine, `WorkflowEngine::startWorkflow`). SMS/WhatsApp
+behind a `MessagingChannel` adapter (`LogMessagingChannel` stub; real providers
+Phase 10); social scheduling deferred.
 
-## ⬜ Phase 7 — AI Layer
+**Acceptance — met (4 new Pest tests, 53 total):** submit a landing-page form → a
+lead is created and **enters a nurture sequence automatically**; a campaign send
+records recipients and **opens/clicks show in analytics** (verified live: send →
+Horizon drained the queue → 18 recipients). Pint + PHPStan L6 green.
+
+## 🔜 Phase 7 — AI Layer (next)
 Wire every `GeminiService` method to real features: lead scoring, recommendations,
 next-best-action, deal-risk, forecasting; ticket summaries/replies/sentiment; AI
 content; predictive analytics, churn, health scoring. Caching, queueing,

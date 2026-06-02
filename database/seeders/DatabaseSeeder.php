@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Account;
+use App\Models\Campaign;
 use App\Models\ChatMessage;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
+use App\Models\Form;
 use App\Models\Invitation;
 use App\Models\KbArticle;
 use App\Models\Lead;
@@ -167,6 +169,24 @@ class DatabaseSeeder extends Seeder
                 'body' => 'We cannot access the app at all!',
             ], 'urgent');
             $breached->forceFill(['sla_due_at' => now()->subHour()])->save(); // overdue → scheduler will escalate
+
+            // Phase 6 — a capture form wired to the nurture workflow + a campaign.
+            Form::create([
+                'name' => 'Contact us',
+                'slug' => 'contact-us-'.Str::lower(Str::random(4)),
+                'fields' => [
+                    ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true],
+                    ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true],
+                    ['key' => 'phone', 'label' => 'Phone', 'type' => 'text', 'required' => false],
+                ],
+                'nurture_workflow_id' => $wf->id,
+            ]);
+
+            Campaign::create([
+                'name' => 'Product newsletter', 'subject' => "What's new at {$tenant->name}", 'subject_b' => 'A quick product update',
+                'body' => '<p>Hi there — here is what we shipped this month.</p>', 'cta_label' => 'Read more',
+                'cta_url' => 'https://example.com', 'audience' => 'contacts', 'status' => 'draft',
+            ]);
 
             tenancy()->end();
         }
