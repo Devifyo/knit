@@ -16,6 +16,7 @@ use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Modules\Admin\Services\Rbac;
+use App\Modules\Admin\Services\TenantMail;
 use App\Modules\Automation\Services\WorkflowEngine;
 use App\Modules\Billing\Contracts\PaymentGateway;
 use App\Modules\Billing\Gateways\ManualPaymentGateway;
@@ -26,6 +27,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Events\TenancyInitialized;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,6 +67,12 @@ class AppServiceProvider extends ServiceProvider
     {
         // Owners bypass every permission check within their workspace.
         Gate::before(fn ($user) => $user->hasRole(Rbac::OWNER) ? true : null);
+
+        // Apply each workspace's own SMTP (or restore env defaults) whenever a
+        // tenant context is entered — covers web requests and queued mail jobs.
+        Event::listen(TenancyInitialized::class, function (): void {
+            app(TenantMail::class)->apply(tenant());
+        });
 
         // Automation triggers — fire workflows on key record events. The engine
         // is tenant-guarded and a no-op when no workflow listens.

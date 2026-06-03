@@ -9,6 +9,7 @@ use App\Modules\Accounts\Http\Controllers\AccountController;
 use App\Modules\Admin\Http\Controllers\AuditController;
 use App\Modules\Admin\Http\Controllers\BrandingController;
 use App\Modules\Admin\Http\Controllers\ComplianceController;
+use App\Modules\Admin\Http\Controllers\EmailController;
 use App\Modules\Admin\Http\Controllers\InvitationController;
 use App\Modules\Admin\Http\Controllers\MemberController;
 use App\Modules\Admin\Http\Controllers\SecurityController;
@@ -264,6 +265,13 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
     Route::delete('/invitations/{invitation}', [MemberController::class, 'revokeInvite'])->middleware('permission:members.invite')->name('invitations.revoke');
     Route::get('/settings/branding', [BrandingController::class, 'edit'])->name('settings.branding');
     Route::put('/settings/branding', [BrandingController::class, 'update'])->middleware('permission:branding.update')->name('settings.branding.update');
+
+    // Per-workspace email (SMTP) — falls back to the platform default when unset.
+    Route::middleware('permission:settings.update')->group(function () {
+        Route::get('/settings/email', [EmailController::class, 'edit'])->name('settings.email');
+        Route::put('/settings/email', [EmailController::class, 'update'])->name('settings.email.update');
+        Route::post('/settings/email/test', [EmailController::class, 'test'])->name('settings.email.test');
+    });
 
     // Billing & subscriptions (account-level)
     Route::get('/settings/billing', [BillingController::class, 'index'])->middleware('permission:billing.view')->name('billing.index');

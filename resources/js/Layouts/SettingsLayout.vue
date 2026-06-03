@@ -8,6 +8,7 @@ const page = usePage();
 const groups = [
     { label: 'Workspace', items: [
         { label: 'Branding', href: '/settings/branding' },
+        { label: 'Email', href: '/settings/email' },
         { label: 'Members & roles', href: '/members' },
         { label: 'Billing', href: '/settings/billing' },
     ] },

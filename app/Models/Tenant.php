@@ -26,6 +26,13 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property string|null $logo_path
  * @property string $timezone
  * @property bool $ai_enabled
+ * @property string|null $smtp_host
+ * @property int|null $smtp_port
+ * @property string|null $smtp_username
+ * @property string|null $smtp_password
+ * @property string|null $smtp_encryption
+ * @property string|null $smtp_from_address
+ * @property string|null $smtp_from_name
  */
 class Tenant extends BaseTenant
 {
@@ -61,7 +68,15 @@ class Tenant extends BaseTenant
             'ai_enabled' => 'boolean',
             'require_2fa' => 'boolean',
             'allowed_ips' => 'array',
+            // Stored (encrypted) in the `data` JSON column via VirtualColumn.
+            'smtp_password' => 'encrypted',
         ];
+    }
+
+    /** Whether this workspace has its own SMTP configured (else env fallback). */
+    public function hasCustomMail(): bool
+    {
+        return filled($this->smtp_host);
     }
 
     /**

@@ -1,12 +1,17 @@
 <script setup>
-import { onMounted } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { computed, onMounted } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Card, Tag } from '@/Components/ui';
 import { useTenant } from '@/Composables/useTenant';
 import { useEcho } from '@/Composables/useEcho';
+import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({ kpis: Object, won: Object, byStage: Array, leaderboard: Array });
 const { tenant } = useTenant();
+const { can } = usePermissions();
+
+// Until the workspace adds its own SMTP, email uses the platform default.
+const mailNeedsSetup = computed(() => tenant.value?.mail_configured === false && can('settings.update'));
 
 // Live: refresh widgets when a workspace metric changes (e.g. a deal closes).
 onMounted(() => {
@@ -29,6 +34,16 @@ const cards = (kpis, won) => [
     <Head title="Dashboard" />
 
     <div class="space-y-6">
+        <!-- Nudge to configure the workspace's own SMTP (email uses the platform default until then). -->
+        <div v-if="mailNeedsSetup" class="flex items-start gap-3 rounded-[var(--radius-card)] border border-warning/30 bg-warning/10 px-4 py-3">
+            <svg viewBox="0 0 24 24" fill="none" class="mt-0.5 size-5 shrink-0 text-warning" stroke="currentColor" stroke-width="1.6"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0z" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-ink">Set up email sending for your workspace</p>
+                <p class="mt-0.5 text-sm text-muted">You're using Knit's default email server. Add your own SMTP so emails (invites, campaigns, notifications) send from your address.</p>
+            </div>
+            <Link href="/settings/email" class="shrink-0 self-center rounded-[var(--radius-control)] bg-[var(--brand)] px-3 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-90">Add SMTP</Link>
+        </div>
+
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-xl font-semibold tracking-[-0.02em] text-ink">Overview</h1>

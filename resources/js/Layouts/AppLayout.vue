@@ -4,9 +4,15 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { Avatar, Toast, CommandPalette, Dropdown, DropdownItem } from '@/Components/ui';
 import { useTenant } from '@/Composables/useTenant';
 import { useEcho } from '@/Composables/useEcho';
+import { usePermissions } from '@/Composables/usePermissions';
 import { useToastStore } from '@/Stores/toast';
 
 const page = usePage();
+const { can } = usePermissions();
+
+// Nudge Owners/Admins to configure their own SMTP (until they do, email uses the
+// platform default). Drives the dashboard banner + a red dot on the account menu.
+const mailNeedsSetup = computed(() => page.props.tenant?.mail_configured === false && can('settings.update'));
 const { tenant } = useTenant();
 const toast = useToastStore();
 
@@ -65,6 +71,7 @@ const icons = {
     health: icon('M12 21s-8-4.5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 6.5-8 11-8 11zM12 8v4M10 10h4'),
     members: icon('M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M11 7a4 4 0 11-8 0 4 4 0 018 0zM21 21v-2a4 4 0 00-3-3.87'),
     help: icon('M12 22a10 10 0 100-20 10 10 0 000 20zM9.1 9a2.9 2.9 0 015.6 1c0 1.9-2.9 2.5-2.9 2.5M12 17h.01'),
+    mail: icon('M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1zM3.5 7l8.5 6 8.5-6'),
     settings: icon('M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.17V21a2 2 0 11-4 0v-.09A1.65 1.65 0 007 19.4l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9H4.5a2 2 0 110-4h.09A1.65 1.65 0 006 4.6l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 0011 2.6V2.5a2 2 0 014 0v.09c0 .67.39 1.27 1 1.51.34.14.72.06 1-.2l.06-.06a2 2 0 112.83 2.83l-.06.06c-.26.28-.34.66-.2 1V9c.24.61.84 1 1.51 1h.09a2 2 0 010 4h-.09c-.67 0-1.27.39-1.51 1z'),
 };
 
@@ -111,6 +118,7 @@ const baseSections = [
 // Workspace / admin — surfaced in the account menu and ⌘K, not the main nav.
 const workspaceLinks = [
     { label: 'Settings', href: '/settings/branding', icon: 'settings' },
+    { label: 'Email', href: '/settings/email', icon: 'mail' },
     { label: 'Members', href: '/members', icon: 'members' },
     { label: 'Billing', href: '/settings/billing', icon: 'billing' },
     { label: 'Security', href: '/settings/security', icon: 'security' },
@@ -277,7 +285,10 @@ onBeforeUnmount(stopTrackingGuideHint);
                 <Dropdown v-if="user" align="left" up class="block w-full">
                     <template #trigger>
                         <button class="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-left transition-colors hover:bg-sunken">
-                            <Avatar :name="user.name" />
+                            <div class="relative shrink-0">
+                                <Avatar :name="user.name" />
+                                <span v-if="mailNeedsSetup" class="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-critical ring-2 ring-surface" title="Set up email sending" />
+                            </div>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-[13px] font-medium text-ink">{{ user.name }}</p>
                                 <p class="truncate text-[11px] text-muted">{{ user.email }}</p>
@@ -286,7 +297,12 @@ onBeforeUnmount(stopTrackingGuideHint);
                         </button>
                     </template>
                     <p class="px-2.5 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-faint">Workspace</p>
-                    <DropdownItem v-for="w in workspaceLinks" :key="w.href" :href="w.href">{{ w.label }}</DropdownItem>
+                    <DropdownItem v-for="w in workspaceLinks" :key="w.href" :href="w.href">
+                        <span class="flex items-center gap-2">
+                            {{ w.label }}
+                            <span v-if="w.href === '/settings/email' && mailNeedsSetup" class="size-1.5 rounded-full bg-critical" title="Not configured" />
+                        </span>
+                    </DropdownItem>
                     <div class="my-1 border-t border-hairline-soft" />
                     <DropdownItem as="button" @click="logout">Sign out</DropdownItem>
                 </Dropdown>

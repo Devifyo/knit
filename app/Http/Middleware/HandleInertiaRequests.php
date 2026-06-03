@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $tenant->getTenantKey(),
                     'name' => $tenant->name,
                     'branding' => $tenant->branding(),
+                    'mail_configured' => $tenant->hasCustomMail(),
                 ] : null;
             },
 

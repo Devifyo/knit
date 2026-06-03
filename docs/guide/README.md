@@ -64,6 +64,7 @@ where to read more:
 17. [Developer — Webhooks](17-developer-webhooks.md)
 18. [Industry Modules](18-industry-modules.md)
 19. [Branding & Workspace Settings](19-branding-and-workspace.md)
+20. [Customer Portal](20-customer-portal.md) — let customers log in to see their own deals, quotes, projects & tickets
 
 ---
 
