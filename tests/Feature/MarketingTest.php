@@ -34,15 +34,18 @@ it('creates a form with custom fields, always keeping Name and Email', function 
         'fields' => [
             ['label' => 'Phone', 'type' => 'tel', 'required' => false],
             ['label' => 'Company size', 'type' => 'number', 'required' => true],
+            ['label' => 'Preferred date', 'type' => 'date', 'required' => false],
+            ['label' => 'Demo slot', 'type' => 'datetime', 'required' => false],
         ],
     ])->assertRedirect();
 
     $form = Form::where('name', 'Demo request')->firstOrFail();
     $keys = collect($form->fields)->pluck('key');
 
-    expect($keys->all())->toBe(['name', 'email', 'phone', 'company_size'])
+    expect($keys->all())->toBe(['name', 'email', 'phone', 'company_size', 'preferred_date', 'demo_slot'])
         ->and(collect($form->fields)->firstWhere('key', 'company_size'))
-        ->toMatchArray(['key' => 'company_size', 'label' => 'Company size', 'type' => 'number', 'required' => true]);
+        ->toMatchArray(['key' => 'company_size', 'label' => 'Company size', 'type' => 'number', 'required' => true])
+        ->and(collect($form->fields)->firstWhere('key', 'demo_slot')['type'])->toBe('datetime');
 });
 
 it('rejects a form field with an invalid type', function () {

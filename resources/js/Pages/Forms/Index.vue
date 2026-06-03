@@ -10,6 +10,8 @@ const fieldTypes = [
     { value: 'email', label: 'Email' },
     { value: 'tel', label: 'Phone' },
     { value: 'number', label: 'Number' },
+    { value: 'date', label: 'Date' },
+    { value: 'datetime', label: 'Date & time' },
 ];
 
 const open = ref(false);
@@ -80,7 +82,7 @@ const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 tex
                     <div v-if="form.fields.length" class="space-y-2">
                         <div v-for="(f, i) in form.fields" :key="i" class="flex items-center gap-2">
                             <input v-model="f.label" placeholder="Field label" :class="selStyle" class="flex-1" />
-                            <select v-model="f.type" :class="selStyle" class="!w-28">
+                            <select v-model="f.type" :class="selStyle" class="!w-32">
                                 <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                             </select>
                             <label class="flex shrink-0 items-center gap-1.5 text-xs text-muted">

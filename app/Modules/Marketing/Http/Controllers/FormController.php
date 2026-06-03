@@ -42,7 +42,7 @@ class FormController extends Controller
             // Caller sends only the *extra* fields; Name + Email are always added.
             'fields' => ['array'],
             'fields.*.label' => ['required', 'string', 'max:80'],
-            'fields.*.type' => ['required', Rule::in(['text', 'email', 'number', 'tel'])],
+            'fields.*.type' => ['required', Rule::in(['text', 'email', 'number', 'tel', 'date', 'datetime'])],
             'fields.*.required' => ['boolean'],
         ]);
 
