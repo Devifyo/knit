@@ -6,6 +6,7 @@ use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\RestrictIpAddress;
+use App\Modules\Portal\Http\Middleware\InitContactTenant;
 use App\Modules\Support\Console\CheckTicketSla;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -46,7 +47,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'ip.allow' => RestrictIpAddress::class,
             '2fa.enforce' => EnforceTwoFactor::class,
+            'portal.tenant' => InitContactTenant::class,
         ]);
+
+        // Unauthenticated visitors to the customer portal go to the portal login,
+        // not the staff login.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('portal*')
+            ? route('portal.login')
+            : route('login'));
 
         // Resolve the tenant after authentication but before route-model binding
         // and authorization, so scoped bindings 404 across tenants and RBAC sees

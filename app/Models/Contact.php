@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Support\Tenancy\BelongsToTenant;
 use App\Support\Tenancy\TenantOwned;
 use Database\Factories\ContactFactory;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,10 +19,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Contact extends Model implements AuditableContract, TenantOwned
+class Contact extends Model implements AuditableContract, AuthenticatableContract, TenantOwned
 {
     /** @use HasFactory<ContactFactory> */
-    use Auditable, BelongsToTenant, HasFactory, SoftDeletes;
+    use Auditable, AuthenticatableTrait, BelongsToTenant, HasFactory, SoftDeletes;
 
     /** @var list<string> */
     protected $fillable = [
@@ -34,11 +36,30 @@ class Contact extends Model implements AuditableContract, TenantOwned
         'social_profiles' => 'array',
         'custom_fields' => 'array',
         'anonymized_at' => 'datetime',
+        'portal_enabled' => 'boolean',
+        'portal_activated_at' => 'datetime',
+        'portal_last_login_at' => 'datetime',
+        'password' => 'hashed',
     ];
+
+    /** @var list<string> */
+    protected $hidden = ['password', 'portal_token', 'remember_token'];
 
     public function isAnonymized(): bool
     {
         return $this->anonymized_at !== null;
+    }
+
+    /** Can this contact sign in to the customer portal right now? */
+    public function canUsePortal(): bool
+    {
+        return $this->portal_enabled && $this->portal_activated_at !== null;
+    }
+
+    /** @return HasMany<Ticket, $this> */
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class)->latest();
     }
 
     public function getNameAttribute(): string

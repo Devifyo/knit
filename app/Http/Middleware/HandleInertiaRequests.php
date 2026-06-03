@@ -36,11 +36,13 @@ class HandleInertiaRequests extends Middleware
 
             'appName' => config('app.name'),
 
+            // Staff user only — resolved via the web guard so a logged-in portal
+            // contact (the `contact` guard) never leaks into the staff app shell.
             'auth' => [
-                'user' => $request->user() ? [
-                    ...$request->user()->only('id', 'name', 'email'),
-                    'roles' => $request->user()->getRoleNames(),
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                'user' => $request->user('web') ? [
+                    ...$request->user('web')->only('id', 'name', 'email'),
+                    'roles' => $request->user('web')->getRoleNames(),
+                    'permissions' => $request->user('web')->getAllPermissions()->pluck('name'),
                 ] : null,
             ],
 
@@ -65,7 +67,7 @@ class HandleInertiaRequests extends Middleware
             // Lightweight billing banner state (trial countdown / current plan).
             // Only resolved when a tenant + user are present.
             'billing' => function () use ($request) {
-                if (! $request->user() || ! function_exists('tenant') || tenant() === null) {
+                if (! $request->user('web') || ! function_exists('tenant') || tenant() === null) {
                     return null;
                 }
                 $sub = Subscription::with('plan')->latest()->first();
@@ -79,7 +81,7 @@ class HandleInertiaRequests extends Middleware
 
             // Sidebar entries for the tenant's enabled industry modules.
             'industryNav' => function () use ($request) {
-                if (! $request->user() || ! function_exists('tenant') || tenant() === null) {
+                if (! $request->user('web') || ! function_exists('tenant') || tenant() === null) {
                     return [];
                 }
 

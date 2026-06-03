@@ -36,6 +36,11 @@ use App\Modules\Marketing\Http\Controllers\CampaignController;
 use App\Modules\Marketing\Http\Controllers\FormController;
 use App\Modules\Marketing\Http\Controllers\FormPublicController;
 use App\Modules\Marketing\Http\Controllers\TrackingController;
+use App\Modules\Portal\Http\Controllers\Auth\ActivationController as PortalActivationController;
+use App\Modules\Portal\Http\Controllers\Auth\LoginController as PortalLoginController;
+use App\Modules\Portal\Http\Controllers\DashboardController as PortalDashboardController;
+use App\Modules\Portal\Http\Controllers\ProfileController as PortalProfileController;
+use App\Modules\Portal\Http\Controllers\TicketController as PortalTicketController;
 use App\Modules\Projects\Http\Controllers\ProjectController;
 use App\Modules\Support\Http\Controllers\HelpController;
 use App\Modules\Support\Http\Controllers\KbController;
@@ -67,6 +72,28 @@ Route::get('/forms/{slug}', [FormPublicController::class, 'show'])->name('forms.
 Route::post('/forms/{slug}', [FormPublicController::class, 'submit'])->name('forms.submit');
 Route::get('/track/open/{token}', [TrackingController::class, 'open'])->name('track.open');
 Route::get('/track/click/{token}', [TrackingController::class, 'click'])->name('track.click');
+
+// Customer portal — contacts sign in (separate `contact` guard) to a branded
+// self-service area scoped to their own records.
+Route::prefix('portal')->group(function () {
+    Route::middleware('guest:contact')->group(function () {
+        Route::get('/login', [PortalLoginController::class, 'show'])->name('portal.login');
+        Route::post('/login', [PortalLoginController::class, 'login']);
+        Route::get('/activate/{token}', [PortalActivationController::class, 'show'])->name('portal.activate');
+        Route::post('/activate/{token}', [PortalActivationController::class, 'activate']);
+    });
+
+    Route::middleware(['auth:contact', 'portal.tenant'])->group(function () {
+        Route::get('/', [PortalDashboardController::class, 'index'])->name('portal.dashboard');
+        Route::post('/logout', [PortalLoginController::class, 'logout'])->name('portal.logout');
+        Route::get('/profile', [PortalProfileController::class, 'edit'])->name('portal.profile');
+        Route::put('/profile', [PortalProfileController::class, 'update'])->name('portal.profile.update');
+        Route::get('/tickets', [PortalTicketController::class, 'index'])->name('portal.tickets');
+        Route::post('/tickets', [PortalTicketController::class, 'store'])->name('portal.tickets.store');
+        Route::get('/tickets/{ticket}', [PortalTicketController::class, 'show'])->whereNumber('ticket')->name('portal.tickets.show');
+        Route::post('/tickets/{ticket}/reply', [PortalTicketController::class, 'reply'])->whereNumber('ticket')->name('portal.tickets.reply');
+    });
+});
 
 Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -108,6 +135,7 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
         Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
         Route::post('/contacts/{contact}/notes', [ContactController::class, 'addNote'])->name('contacts.notes');
         Route::post('/contacts/{contact}/meeting', [MeetingController::class, 'summarize'])->name('contacts.meeting');
+        Route::post('/contacts/{contact}/portal-access', [ContactController::class, 'portalAccess'])->name('contacts.portal-access');
     });
 
     // Companies

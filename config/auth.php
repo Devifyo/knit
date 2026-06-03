@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Contact;
 use App\Models\User;
 
 return [
@@ -44,6 +45,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Customer portal — contacts log in to a self-service area.
+        'contact' => [
+            'driver' => 'session',
+            'provider' => 'contacts',
+        ],
     ],
 
     /*
@@ -69,10 +76,10 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'contacts' => [
+            'driver' => 'eloquent',
+            'model' => Contact::class,
+        ],
     ],
 
     /*

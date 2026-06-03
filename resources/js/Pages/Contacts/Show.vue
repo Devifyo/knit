@@ -4,8 +4,11 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { Card, Avatar, Tag, Button, Input, Modal } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const props = defineProps({ contact: Object, customFields: Array });
+const props = defineProps({ contact: Object, customFields: Array, portal: Object });
 const { can } = usePermissions();
+
+const portalAction = (action) => router.post(`/contacts/${props.contact.id}/portal-access`, { action }, { preserveScroll: true });
+const copyPortalLink = () => props.portal?.activation_url && navigator.clipboard?.writeText(props.portal.activation_url);
 
 const erase = () => {
     if (confirm('Anonymize this contact? This permanently removes their personal data and cannot be undone.')) {
@@ -59,6 +62,31 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
                     <div class="mt-3 flex gap-2">
                         <Button variant="secondary" size="sm" :href="`/contacts/${contact.id}/export`">Export JSON</Button>
                         <Button variant="ghost" size="sm" class="text-critical" @click="erase">Erase</Button>
+                    </div>
+                </Card>
+
+                <!-- Customer portal access -->
+                <Card v-if="can('contacts.manage') && portal" title="Customer portal">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-xs text-muted">Let this customer sign in to see their tickets, deals and more.</p>
+                        <Tag size="sm" :color="portal.activated ? 'positive' : portal.enabled ? 'warning' : 'neutral'">{{ portal.activated ? 'Active' : portal.enabled ? 'Invited' : 'Off' }}</Tag>
+                    </div>
+                    <p v-if="!portal.has_email" class="mt-2 text-xs text-critical">Add an email address to enable portal access.</p>
+
+                    <div v-if="portal.activation_url" class="mt-3">
+                        <p class="mb-1 text-xs font-medium text-muted">Activation link — send this to the customer</p>
+                        <div class="flex items-center gap-2">
+                            <input :value="portal.activation_url" readonly class="h-8 flex-1 truncate rounded-[var(--radius-control)] bg-sunken px-2 font-mono text-[11px] text-ink-soft ring-1 ring-inset ring-hairline" />
+                            <Button size="sm" variant="secondary" @click="copyPortalLink">Copy</Button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <Button v-if="!portal.enabled" size="sm" :disabled="!portal.has_email" @click="portalAction('enable')">Enable portal</Button>
+                        <template v-else>
+                            <Button size="sm" variant="secondary" @click="portalAction('reset')">{{ portal.activated ? 'Reset password link' : 'New invite link' }}</Button>
+                            <Button size="sm" variant="ghost" class="text-critical" @click="portalAction('disable')">Disable</Button>
+                        </template>
                     </div>
                 </Card>
             </div>

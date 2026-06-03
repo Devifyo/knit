@@ -12,6 +12,7 @@ use App\Models\CustomFieldDefinition;
 use App\Models\Deal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,7 +83,49 @@ class ContactController extends Controller
                 ]),
             ],
             'customFields' => $this->fields(),
+            'portal' => [
+                'enabled' => (bool) $contact->portal_enabled,
+                'activated' => $contact->portal_activated_at !== null,
+                'activation_url' => $contact->portal_token ? url('/portal/activate/'.$contact->portal_token) : null,
+                'login_url' => url('/portal/login'),
+                'has_email' => (bool) $contact->email,
+            ],
         ]);
+    }
+
+    /** Enable / disable / reset a contact's customer-portal access. */
+    public function portalAccess(Request $request, Contact $contact): RedirectResponse
+    {
+        $action = (string) $request->input('action');
+
+        if ($action === 'disable') {
+            $contact->forceFill(['portal_enabled' => false])->save();
+
+            return back()->with('success', 'Portal access disabled.');
+        }
+
+        if (! $contact->email) {
+            return back()->with('error', 'Add an email address before enabling portal access.');
+        }
+
+        if ($action === 'reset') {
+            // Force a fresh set-password link (e.g. the customer forgot their password).
+            $contact->forceFill([
+                'portal_enabled' => true,
+                'portal_token' => Str::random(48),
+                'portal_activated_at' => null,
+            ])->save();
+        } else {
+            $contact->forceFill(['portal_enabled' => true]);
+            if ($contact->portal_activated_at === null && ! $contact->portal_token) {
+                $contact->portal_token = Str::random(48);
+            }
+            $contact->save();
+        }
+
+        return back()->with('success', $contact->portal_token
+            ? 'Portal invite ready — copy the activation link from the card.'
+            : 'Portal access enabled.');
     }
 
     public function store(Request $request): RedirectResponse
