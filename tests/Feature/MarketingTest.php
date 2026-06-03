@@ -48,6 +48,32 @@ it('creates a form with custom fields, always keeping Name and Email', function 
         ->and(collect($form->fields)->firstWhere('key', 'demo_slot')['type'])->toBe('datetime');
 });
 
+it('edits a form: renames, reorders and changes fields, keeping the slug', function () {
+    [, $owner] = marketingWorkspace();
+    $form = Form::create([
+        'name' => 'Old name', 'slug' => 'keep-me',
+        'fields' => [
+            ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true],
+            ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true],
+            ['key' => 'phone', 'label' => 'Phone', 'type' => 'tel', 'required' => false],
+        ],
+    ]);
+
+    $this->actingAs($owner)->put("/forms/{$form->id}", [
+        'name' => 'New name',
+        'fields' => [
+            // Reordered: budget first, phone second.
+            ['label' => 'Budget', 'type' => 'number', 'required' => true],
+            ['label' => 'Phone', 'type' => 'tel', 'required' => false],
+        ],
+    ])->assertRedirect();
+
+    $form->refresh();
+    expect($form->name)->toBe('New name')
+        ->and($form->slug)->toBe('keep-me')
+        ->and(collect($form->fields)->pluck('key')->all())->toBe(['name', 'email', 'budget', 'phone']);
+});
+
 it('rejects a form field with an invalid type', function () {
     [, $owner] = marketingWorkspace();
 

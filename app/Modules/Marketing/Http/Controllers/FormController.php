@@ -24,6 +24,8 @@ class FormController extends Controller
                 'name' => $f->name,
                 'url' => url('/forms/'.$f->slug),
                 'fields' => count($f->fields ?? []),
+                'schema' => $f->fields ?? [],
+                'nurture_workflow_id' => $f->nurture_workflow_id,
                 'submissions' => $f->submissions_count,
                 'nurture' => $f->nurtureWorkflow?->name,
             ])->all();
@@ -36,15 +38,7 @@ class FormController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'nurture_workflow_id' => ['nullable', 'exists:workflows,id'],
-            // Caller sends only the *extra* fields; Name + Email are always added.
-            'fields' => ['array'],
-            'fields.*.label' => ['required', 'string', 'max:80'],
-            'fields.*.type' => ['required', Rule::in(['text', 'email', 'number', 'tel', 'date', 'datetime'])],
-            'fields.*.required' => ['boolean'],
-        ]);
+        $data = $request->validate($this->rules());
 
         Form::create([
             'name' => $data['name'],
@@ -54,6 +48,38 @@ class FormController extends Controller
         ]);
 
         return back()->with('success', 'Form created — share its public URL.');
+    }
+
+    public function update(Request $request, Form $form): RedirectResponse
+    {
+        $data = $request->validate($this->rules());
+
+        // Slug (public URL) stays stable across edits so shared links keep working.
+        $form->update([
+            'name' => $data['name'],
+            'fields' => $this->buildFields($data['fields'] ?? []),
+            'nurture_workflow_id' => $data['nurture_workflow_id'] ?? null,
+        ]);
+
+        return back()->with('success', 'Form updated.');
+    }
+
+    /**
+     * Validation rules shared by store + update. The caller sends only the *extra*
+     * fields (in display order); Name + Email are always added by buildFields().
+     *
+     * @return array<string, mixed>
+     */
+    protected function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'nurture_workflow_id' => ['nullable', 'exists:workflows,id'],
+            'fields' => ['array'],
+            'fields.*.label' => ['required', 'string', 'max:80'],
+            'fields.*.type' => ['required', Rule::in(['text', 'email', 'number', 'tel', 'date', 'datetime'])],
+            'fields.*.required' => ['boolean'],
+        ];
     }
 
     /**

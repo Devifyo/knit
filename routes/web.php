@@ -179,6 +179,7 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
         Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
         Route::post('/campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
         Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
+        Route::put('/forms/{form}', [FormController::class, 'update'])->name('forms.update');
     });
 
     // Automation — workflows
