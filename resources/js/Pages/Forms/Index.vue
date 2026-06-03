@@ -30,7 +30,12 @@ const openCreate = () => {
     editingId.value = null;
     form.reset();
     form.clearErrors();
-    form.fields = [newField({ label: 'Phone', type: 'tel' })];
+    // Sensible starting point — fully editable/removable.
+    form.fields = [
+        newField({ label: 'Name', type: 'text', required: true }),
+        newField({ label: 'Email', type: 'email', required: true }),
+        newField({ label: 'Phone', type: 'tel', required: false }),
+    ];
     open.value = true;
 };
 
@@ -39,9 +44,7 @@ const openEdit = (f) => {
     form.clearErrors();
     form.name = f.name;
     form.nurture_workflow_id = f.nurture_workflow_id ?? '';
-    form.fields = (f.schema || [])
-        .filter((x) => !['name', 'email'].includes(x.key))
-        .map((x) => newField({ label: x.label, type: x.type, required: !!x.required }));
+    form.fields = (f.schema || []).map((x) => newField({ label: x.label, type: x.type, required: !!x.required }));
     open.value = true;
 };
 
@@ -109,14 +112,9 @@ const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 tex
                         <label class="block text-xs font-medium text-muted">Fields <span class="text-faint">— drag to reorder</span></label>
                         <button type="button" class="text-xs font-medium text-[var(--brand)] hover:underline" @click="addField">+ Add field</button>
                     </div>
+                    <p v-if="form.errors.fields" class="mb-2 text-xs text-critical">{{ form.errors.fields }}</p>
 
-                    <!-- Always-included fields -->
-                    <div class="mb-2 flex flex-wrap gap-1.5">
-                        <Tag size="sm">Name · required</Tag>
-                        <Tag size="sm">Email · required</Tag>
-                    </div>
-
-                    <!-- Custom fields (draggable to reorder) -->
+                    <!-- Fully customizable fields (draggable to reorder) -->
                     <draggable v-if="form.fields.length" v-model="form.fields" item-key="_k" handle=".field-grip" ghost-class="opacity-40" class="space-y-2">
                         <template #item="{ element: f, index: i }">
                             <div class="flex items-center gap-2">
@@ -136,7 +134,7 @@ const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 tex
                             </div>
                         </template>
                     </draggable>
-                    <p v-else class="text-xs text-faint">No extra fields — only Name and Email will be collected.</p>
+                    <p v-else class="text-xs text-faint">No fields yet — add at least one. Tip: include an Email field so leads can be de-duplicated and scored.</p>
                 </div>
 
                 <div>

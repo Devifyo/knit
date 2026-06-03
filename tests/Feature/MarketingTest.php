@@ -26,26 +26,32 @@ function marketingWorkspace(): array
     return [$tenant, $tenant->getRelation('owner')];
 }
 
-it('creates a form with custom fields, always keeping Name and Email', function () {
+it('creates a form with fully custom fields — nothing is forced', function () {
     [, $owner] = marketingWorkspace();
 
     $this->actingAs($owner)->post('/forms', [
         'name' => 'Demo request',
         'fields' => [
-            ['label' => 'Phone', 'type' => 'tel', 'required' => false],
+            ['label' => 'Full name', 'type' => 'text', 'required' => false],
             ['label' => 'Company size', 'type' => 'number', 'required' => true],
-            ['label' => 'Preferred date', 'type' => 'date', 'required' => false],
             ['label' => 'Demo slot', 'type' => 'datetime', 'required' => false],
         ],
     ])->assertRedirect();
 
     $form = Form::where('name', 'Demo request')->firstOrFail();
-    $keys = collect($form->fields)->pluck('key');
 
-    expect($keys->all())->toBe(['name', 'email', 'phone', 'company_size', 'preferred_date', 'demo_slot'])
+    // Exactly the fields submitted, in order — no Name/Email auto-injected.
+    expect(collect($form->fields)->pluck('key')->all())->toBe(['full_name', 'company_size', 'demo_slot'])
         ->and(collect($form->fields)->firstWhere('key', 'company_size'))
         ->toMatchArray(['key' => 'company_size', 'label' => 'Company size', 'type' => 'number', 'required' => true])
         ->and(collect($form->fields)->firstWhere('key', 'demo_slot')['type'])->toBe('datetime');
+});
+
+it('requires at least one field', function () {
+    [, $owner] = marketingWorkspace();
+
+    $this->actingAs($owner)->post('/forms', ['name' => 'Empty', 'fields' => []])
+        ->assertSessionHasErrors('fields');
 });
 
 it('edits a form: renames, reorders and changes fields, keeping the slug', function () {
@@ -62,7 +68,7 @@ it('edits a form: renames, reorders and changes fields, keeping the slug', funct
     $this->actingAs($owner)->put("/forms/{$form->id}", [
         'name' => 'New name',
         'fields' => [
-            // Reordered: budget first, phone second.
+            // Dropped Name/Email, reordered, added Budget — all allowed now.
             ['label' => 'Budget', 'type' => 'number', 'required' => true],
             ['label' => 'Phone', 'type' => 'tel', 'required' => false],
         ],
@@ -71,7 +77,7 @@ it('edits a form: renames, reorders and changes fields, keeping the slug', funct
     $form->refresh();
     expect($form->name)->toBe('New name')
         ->and($form->slug)->toBe('keep-me')
-        ->and(collect($form->fields)->pluck('key')->all())->toBe(['name', 'email', 'budget', 'phone']);
+        ->and(collect($form->fields)->pluck('key')->all())->toBe(['budget', 'phone']);
 });
 
 it('rejects a form field with an invalid type', function () {
