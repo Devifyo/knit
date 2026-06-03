@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Contact;
+use App\Models\Deal;
+use App\Models\Pipeline;
+use App\Models\Quote;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
@@ -86,6 +89,31 @@ it('a contact can only see their own tickets, never another contact\'s', functio
     $this->actingAs($alice, 'contact')->get("/portal/tickets/{$aliceTicket->id}")->assertOk();
     // …but never Bob's.
     $this->actingAs($alice, 'contact')->get("/portal/tickets/{$bobTicket->id}")->assertNotFound();
+});
+
+it('shows a contact only their own quotes and lets them accept one', function () {
+    portalWorkspace();
+    $alice = activatedContact('alice@acme.test');
+    $bob = activatedContact('bob@acme.test');
+
+    $pipeline = Pipeline::where('is_default', true)->first();
+    $stage = $pipeline->stages()->first();
+
+    $aliceDeal = Deal::factory()->create(['contact_id' => $alice->id, 'pipeline_id' => $pipeline->id, 'stage_id' => $stage->id]);
+    $bobDeal = Deal::factory()->create(['contact_id' => $bob->id, 'pipeline_id' => $pipeline->id, 'stage_id' => $stage->id]);
+
+    $aliceQuote = Quote::create(['deal_id' => $aliceDeal->id, 'number' => 'Q-A', 'status' => 'sent', 'currency' => 'USD', 'tax_rate' => 0]);
+    $aliceQuote->items()->create(['name' => 'Service', 'quantity' => 2, 'unit_price' => 5000, 'discount_pct' => 0]);
+    $bobQuote = Quote::create(['deal_id' => $bobDeal->id, 'number' => 'Q-B', 'status' => 'sent', 'currency' => 'USD', 'tax_rate' => 0]);
+
+    // Alice sees her quote, not Bob's.
+    $this->actingAs($alice, 'contact')->get("/portal/quotes/{$aliceQuote->id}")->assertOk();
+    $this->actingAs($alice, 'contact')->get("/portal/quotes/{$bobQuote->id}")->assertNotFound();
+
+    // Accepting syncs the deal amount to the quote total (2 × $50.00 = $100.00 → 10000 minor).
+    $this->actingAs($alice, 'contact')->post("/portal/quotes/{$aliceQuote->id}/respond", ['decision' => 'accept'])->assertRedirect();
+    expect($aliceQuote->fresh()->status)->toBe('accepted')
+        ->and($aliceDeal->fresh()->amount)->toBe(10000);
 });
 
 it('lets a contact open a ticket from the portal', function () {

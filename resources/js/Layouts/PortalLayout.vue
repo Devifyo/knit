@@ -24,6 +24,8 @@ watch(() => page.props.flash?.error, (m) => m && toast.push({ message: m, type: 
 
 const nav = [
     { label: 'Overview', href: '/portal' },
+    { label: 'Deals', href: '/portal/deals' },
+    { label: 'Quotes', href: '/portal/quotes' },
     { label: 'Tickets', href: '/portal/tickets' },
     { label: 'Profile', href: '/portal/profile' },
 ];

@@ -39,7 +39,9 @@ use App\Modules\Marketing\Http\Controllers\TrackingController;
 use App\Modules\Portal\Http\Controllers\Auth\ActivationController as PortalActivationController;
 use App\Modules\Portal\Http\Controllers\Auth\LoginController as PortalLoginController;
 use App\Modules\Portal\Http\Controllers\DashboardController as PortalDashboardController;
+use App\Modules\Portal\Http\Controllers\DealController as PortalDealController;
 use App\Modules\Portal\Http\Controllers\ProfileController as PortalProfileController;
+use App\Modules\Portal\Http\Controllers\QuoteController as PortalQuoteController;
 use App\Modules\Portal\Http\Controllers\TicketController as PortalTicketController;
 use App\Modules\Projects\Http\Controllers\ProjectController;
 use App\Modules\Support\Http\Controllers\HelpController;
@@ -92,6 +94,14 @@ Route::prefix('portal')->group(function () {
         Route::post('/tickets', [PortalTicketController::class, 'store'])->name('portal.tickets.store');
         Route::get('/tickets/{ticket}', [PortalTicketController::class, 'show'])->whereNumber('ticket')->name('portal.tickets.show');
         Route::post('/tickets/{ticket}/reply', [PortalTicketController::class, 'reply'])->whereNumber('ticket')->name('portal.tickets.reply');
+
+        Route::get('/deals', [PortalDealController::class, 'index'])->name('portal.deals');
+        Route::get('/deals/{deal}', [PortalDealController::class, 'show'])->whereNumber('deal')->name('portal.deals.show');
+
+        Route::get('/quotes', [PortalQuoteController::class, 'index'])->name('portal.quotes');
+        Route::get('/quotes/{quote}', [PortalQuoteController::class, 'show'])->whereNumber('quote')->name('portal.quotes.show');
+        Route::get('/quotes/{quote}/pdf', [PortalQuoteController::class, 'pdf'])->whereNumber('quote')->name('portal.quotes.pdf');
+        Route::post('/quotes/{quote}/respond', [PortalQuoteController::class, 'respond'])->whereNumber('quote')->name('portal.quotes.respond');
     });
 });
 
