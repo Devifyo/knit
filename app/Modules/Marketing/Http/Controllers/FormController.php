@@ -10,6 +10,7 @@ use App\Models\Workflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,20 +39,53 @@ class FormController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'nurture_workflow_id' => ['nullable', 'exists:workflows,id'],
+            // Caller sends only the *extra* fields; Name + Email are always added.
             'fields' => ['array'],
+            'fields.*.label' => ['required', 'string', 'max:80'],
+            'fields.*.type' => ['required', Rule::in(['text', 'email', 'number', 'tel'])],
+            'fields.*.required' => ['boolean'],
         ]);
 
         Form::create([
             'name' => $data['name'],
             'slug' => Str::slug($data['name']).'-'.Str::lower(Str::random(4)),
-            'fields' => $data['fields'] ?? [
-                ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true],
-                ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true],
-                ['key' => 'phone', 'label' => 'Phone', 'type' => 'text', 'required' => false],
-            ],
+            'fields' => $this->buildFields($data['fields'] ?? []),
             'nurture_workflow_id' => $data['nurture_workflow_id'] ?? null,
         ]);
 
         return back()->with('success', 'Form created — share its public URL.');
+    }
+
+    /**
+     * Build the stored field schema: Name + Email are always present (the lead
+     * intake depends on them), followed by the workspace's custom fields. Keys are
+     * derived from labels server-side and de-duplicated.
+     *
+     * @param  array<int, array{label: string, type: string, required?: bool}>  $custom
+     * @return array<int, array{key: string, label: string, type: string, required: bool}>
+     */
+    protected function buildFields(array $custom): array
+    {
+        $fields = [
+            ['key' => 'name', 'label' => 'Name', 'type' => 'text', 'required' => true],
+            ['key' => 'email', 'label' => 'Email', 'type' => 'email', 'required' => true],
+        ];
+        $seen = ['name' => true, 'email' => true];
+
+        foreach ($custom as $field) {
+            $key = Str::slug($field['label'], '_');
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $fields[] = [
+                'key' => $key,
+                'label' => $field['label'],
+                'type' => $field['type'],
+                'required' => (bool) ($field['required'] ?? false),
+            ];
+        }
+
+        return $fields;
     }
 }

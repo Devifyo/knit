@@ -26,6 +26,34 @@ function marketingWorkspace(): array
     return [$tenant, $tenant->getRelation('owner')];
 }
 
+it('creates a form with custom fields, always keeping Name and Email', function () {
+    [, $owner] = marketingWorkspace();
+
+    $this->actingAs($owner)->post('/forms', [
+        'name' => 'Demo request',
+        'fields' => [
+            ['label' => 'Phone', 'type' => 'tel', 'required' => false],
+            ['label' => 'Company size', 'type' => 'number', 'required' => true],
+        ],
+    ])->assertRedirect();
+
+    $form = Form::where('name', 'Demo request')->firstOrFail();
+    $keys = collect($form->fields)->pluck('key');
+
+    expect($keys->all())->toBe(['name', 'email', 'phone', 'company_size'])
+        ->and(collect($form->fields)->firstWhere('key', 'company_size'))
+        ->toMatchArray(['key' => 'company_size', 'label' => 'Company size', 'type' => 'number', 'required' => true]);
+});
+
+it('rejects a form field with an invalid type', function () {
+    [, $owner] = marketingWorkspace();
+
+    $this->actingAs($owner)->post('/forms', [
+        'name' => 'Bad form',
+        'fields' => [['label' => 'Weird', 'type' => 'rocket', 'required' => false]],
+    ])->assertSessionHasErrors('fields.0.type');
+});
+
 it('creates a linked lead and enrols it into the nurture sequence on form submit', function () {
     [$tenant, $owner] = marketingWorkspace();
 

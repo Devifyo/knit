@@ -35,7 +35,7 @@ const submit = () => data.post(`/forms/${props.form.slug}`, { onSuccess: () => d
                 <template v-else>
                     <h1 class="text-lg font-semibold tracking-[-0.02em] text-ink">{{ form.name }}</h1>
                     <form class="mt-5 space-y-4" @submit.prevent="submit">
-                        <Input v-for="f in form.fields" :key="f.key" v-model="data[f.key]" :label="f.label + (f.required ? ' *' : '')" :type="f.type === 'email' ? 'email' : 'text'" :error="data.errors[f.key]" />
+                        <Input v-for="f in form.fields" :key="f.key" v-model="data[f.key]" :label="f.label + (f.required ? ' *' : '')" :type="['email', 'number', 'tel'].includes(f.type) ? f.type : 'text'" :error="data.errors[f.key]" />
                         <Button type="submit" class="w-full" :loading="data.processing" @click="submit">Submit</Button>
                     </form>
                 </template>
