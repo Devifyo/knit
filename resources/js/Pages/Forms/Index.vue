@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import { Card, Button, Input, Tag, EmptyState, Modal } from '@/Components/ui';
 
@@ -143,6 +143,16 @@ const selStyle = 'h-9 w-full rounded-[var(--radius-control)] bg-surface px-3 tex
                         <option value="">— none —</option>
                         <option v-for="w in workflows" :key="w.id" :value="w.id">{{ w.name }}</option>
                     </select>
+                    <p class="mt-1.5 text-xs text-muted">
+                        Automatically enrol every submission into an automation — a timed series of
+                        follow-ups (welcome email, reminders, a “call this lead” task, tags…). Leave as
+                        <span class="font-medium text-ink-soft">— none —</span> to just capture the lead.
+                    </p>
+                    <p v-if="!workflows.length" class="mt-1 text-xs text-faint">
+                        No automations yet — create one in
+                        <Link href="/workflows" class="text-[var(--brand)] hover:underline">Automate → Workflows</Link>
+                        and it’ll appear here.
+                    </p>
                 </div>
             </form>
             <template #footer>
