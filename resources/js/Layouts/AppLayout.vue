@@ -13,6 +13,9 @@ const toast = useToastStore();
 const branding = computed(() => tenant.value?.branding ?? {});
 const user = computed(() => page.props.auth?.user);
 
+// Mobile navigation drawer (the sidebar is a slide-in overlay below lg).
+const mobileNav = ref(false);
+
 const applyBrand = () => {
     const color = branding.value?.brand_color;
     if (color) document.documentElement.style.setProperty('--brand', color);
@@ -202,15 +205,23 @@ onMounted(() => {
     }, 650));
 });
 
-// Visiting the guide (by any route) counts as discovering it.
-watch(() => page.url, (url) => { if (url.startsWith('/guide')) dismissGuideHint(); });
+// Close the mobile drawer on navigation; visiting the guide dismisses the hint.
+watch(() => page.url, (url) => { mobileNav.value = false; if (url.startsWith('/guide')) dismissGuideHint(); });
 onBeforeUnmount(stopTrackingGuideHint);
 </script>
 
 <template>
     <div class="flex min-h-[100dvh] bg-canvas">
-        <!-- Sidebar -->
-        <aside class="hidden w-[256px] shrink-0 flex-col border-r border-hairline bg-surface lg:flex lg:sticky lg:top-0 lg:h-[100dvh]">
+        <!-- Mobile drawer backdrop -->
+        <Transition enter-active-class="transition-opacity duration-200" leave-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-to-class="opacity-0">
+            <div v-if="mobileNav" class="fixed inset-0 z-40 bg-gray-900/40 backdrop-blur-sm lg:hidden" @click="mobileNav = false" />
+        </Transition>
+
+        <!-- Sidebar — static column on lg, slide-in drawer below it -->
+        <aside
+            class="fixed inset-y-0 left-0 z-50 flex w-[256px] shrink-0 flex-col border-r border-hairline bg-surface transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-[100dvh] lg:translate-x-0"
+            :class="mobileNav ? 'translate-x-0' : '-translate-x-full'"
+        >
             <!-- Workspace identity -->
             <div class="flex h-[60px] items-center gap-2.5 px-4">
                 <img v-if="branding.logo" :src="branding.logo" alt="" class="size-8 rounded-lg object-cover ring-1 ring-hairline" />
@@ -284,10 +295,20 @@ onBeforeUnmount(stopTrackingGuideHint);
 
         <!-- Main -->
         <div class="flex min-w-0 flex-1 flex-col">
-            <header class="flex h-[60px] items-center justify-between gap-4 border-b border-hairline bg-surface/80 px-6 backdrop-blur">
-                <slot name="header">
-                    <h1 class="text-sm font-semibold tracking-[-0.01em] text-ink">{{ $page.props.title ?? '' }}</h1>
-                </slot>
+            <header class="flex h-[60px] items-center justify-between gap-4 border-b border-hairline bg-surface/80 px-4 backdrop-blur lg:px-6">
+                <div class="flex min-w-0 items-center gap-2.5">
+                    <button
+                        class="grid size-8 shrink-0 place-items-center rounded-[var(--radius-control)] text-faint transition-colors hover:bg-sunken hover:text-ink-soft lg:hidden"
+                        title="Open menu"
+                        aria-label="Open navigation menu"
+                        @click="mobileNav = true"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                    <slot name="header">
+                        <h1 class="truncate text-sm font-semibold tracking-[-0.01em] text-ink">{{ $page.props.title ?? '' }}</h1>
+                    </slot>
+                </div>
                 <div class="flex items-center gap-1">
                     <button
                         class="grid size-8 place-items-center rounded-[var(--radius-control)] text-faint transition-colors hover:bg-sunken hover:text-ink-soft lg:hidden"
