@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button, Input } from '@/Components/ui';
 
 defineOptions({ layout: null });
@@ -18,9 +18,12 @@ const submit = () => form.post('/portal/login', { onError: () => form.reset('pas
                 <form class="mt-5 space-y-4" @submit.prevent="submit">
                     <Input v-model="form.email" type="email" label="Email" :error="form.errors.email" placeholder="you@company.com" />
                     <Input v-model="form.password" type="password" label="Password" :error="form.errors.password" placeholder="••••••••" />
-                    <label class="flex items-center gap-2 text-xs text-muted">
-                        <input v-model="form.remember" type="checkbox" class="rounded border-hairline text-[var(--brand)] focus:ring-[var(--brand)]" /> Remember me
-                    </label>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 text-xs text-muted">
+                            <input v-model="form.remember" type="checkbox" class="rounded border-hairline text-[var(--brand)] focus:ring-[var(--brand)]" /> Remember me
+                        </label>
+                        <Link href="/portal/forgot-password" class="text-xs text-[var(--brand)] hover:underline">Forgot password?</Link>
+                    </div>
                     <Button type="submit" class="w-full" :loading="form.processing" @click="submit">Sign in</Button>
                 </form>
             </div>

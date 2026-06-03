@@ -10,8 +10,10 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\CustomFieldDefinition;
 use App\Models\Deal;
+use App\Modules\Portal\Mail\PortalAccessMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -123,9 +125,22 @@ class ContactController extends Controller
             $contact->save();
         }
 
-        return back()->with('success', $contact->portal_token
-            ? 'Portal invite ready — copy the activation link from the card.'
-            : 'Portal access enabled.');
+        // Email the set-password link when there's one to send.
+        if ($contact->portal_token) {
+            try {
+                Mail::to($contact->email)->send(new PortalAccessMail(
+                    url('/portal/activate/'.$contact->portal_token),
+                    (string) (tenant('name') ?? 'your workspace'),
+                    reset: $action === 'reset',
+                ));
+
+                return back()->with('success', "Portal invite emailed to {$contact->email}.");
+            } catch (\Throwable) {
+                return back()->with('success', 'Portal enabled — email delivery failed, copy the activation link from the card.');
+            }
+        }
+
+        return back()->with('success', 'Portal access enabled.');
     }
 
     public function store(Request $request): RedirectResponse

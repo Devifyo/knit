@@ -62,6 +62,12 @@ class Contact extends Model implements AuditableContract, AuthenticatableContrac
         return $this->hasMany(Ticket::class)->latest();
     }
 
+    /** @return HasMany<Project, $this> */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class)->latest();
+    }
+
     public function getNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");

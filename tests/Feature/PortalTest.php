@@ -7,7 +7,9 @@ use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\Quote;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
+use App\Modules\Portal\Mail\PortalAccessMail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\PermissionRegistrar;
 
 /** Spin up a tenant + owner and enter its context. */
@@ -114,6 +116,48 @@ it('shows a contact only their own quotes and lets them accept one', function ()
     $this->actingAs($alice, 'contact')->post("/portal/quotes/{$aliceQuote->id}/respond", ['decision' => 'accept'])->assertRedirect();
     expect($aliceQuote->fresh()->status)->toBe('accepted')
         ->and($aliceDeal->fresh()->amount)->toBe(10000);
+});
+
+it('emails the activation link when staff invite a contact', function () {
+    Mail::fake();
+    [, $owner] = portalWorkspace();
+    $contact = Contact::factory()->create(['email' => 'cust@acme.test']);
+
+    $this->actingAs($owner)->post("/contacts/{$contact->id}/portal-access", ['action' => 'enable'])->assertRedirect();
+
+    Mail::assertSent(PortalAccessMail::class, fn (PortalAccessMail $m) => $m->hasTo('cust@acme.test') && $m->reset === false);
+});
+
+it('emails a reset link via self-service forgot password', function () {
+    Mail::fake();
+    portalWorkspace();
+    $contact = activatedContact('cust@acme.test');
+
+    $this->post('/portal/forgot-password', ['email' => 'cust@acme.test'])->assertRedirect();
+
+    expect($contact->fresh()->portal_token)->not->toBeNull();
+    Mail::assertSent(PortalAccessMail::class, fn (PortalAccessMail $m) => $m->hasTo('cust@acme.test') && $m->reset === true);
+});
+
+it('does not reveal whether an email exists on forgot password', function () {
+    Mail::fake();
+    portalWorkspace();
+
+    $this->post('/portal/forgot-password', ['email' => 'nobody@nowhere.test'])->assertRedirect();
+
+    Mail::assertNothingSent();
+});
+
+it('shows a contact only their own projects', function () {
+    [, $owner] = portalWorkspace();
+    $alice = activatedContact('alice@acme.test');
+    $bob = activatedContact('bob@acme.test');
+
+    $aliceProject = $alice->projects()->create(['name' => 'Alice delivery', 'status' => 'active', 'owner_id' => $owner->id]);
+    $bobProject = $bob->projects()->create(['name' => 'Bob delivery', 'status' => 'active', 'owner_id' => $owner->id]);
+
+    $this->actingAs($alice, 'contact')->get("/portal/projects/{$aliceProject->id}")->assertOk();
+    $this->actingAs($alice, 'contact')->get("/portal/projects/{$bobProject->id}")->assertNotFound();
 });
 
 it('lets a contact open a ticket from the portal', function () {

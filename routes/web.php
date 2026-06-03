@@ -37,10 +37,12 @@ use App\Modules\Marketing\Http\Controllers\FormController;
 use App\Modules\Marketing\Http\Controllers\FormPublicController;
 use App\Modules\Marketing\Http\Controllers\TrackingController;
 use App\Modules\Portal\Http\Controllers\Auth\ActivationController as PortalActivationController;
+use App\Modules\Portal\Http\Controllers\Auth\ForgotPasswordController as PortalForgotPasswordController;
 use App\Modules\Portal\Http\Controllers\Auth\LoginController as PortalLoginController;
 use App\Modules\Portal\Http\Controllers\DashboardController as PortalDashboardController;
 use App\Modules\Portal\Http\Controllers\DealController as PortalDealController;
 use App\Modules\Portal\Http\Controllers\ProfileController as PortalProfileController;
+use App\Modules\Portal\Http\Controllers\ProjectController as PortalProjectController;
 use App\Modules\Portal\Http\Controllers\QuoteController as PortalQuoteController;
 use App\Modules\Portal\Http\Controllers\TicketController as PortalTicketController;
 use App\Modules\Projects\Http\Controllers\ProjectController;
@@ -83,6 +85,8 @@ Route::prefix('portal')->group(function () {
         Route::post('/login', [PortalLoginController::class, 'login']);
         Route::get('/activate/{token}', [PortalActivationController::class, 'show'])->name('portal.activate');
         Route::post('/activate/{token}', [PortalActivationController::class, 'activate']);
+        Route::get('/forgot-password', [PortalForgotPasswordController::class, 'show'])->name('portal.password.request');
+        Route::post('/forgot-password', [PortalForgotPasswordController::class, 'send'])->name('portal.password.email');
     });
 
     Route::middleware(['auth:contact', 'portal.tenant'])->group(function () {
@@ -102,6 +106,9 @@ Route::prefix('portal')->group(function () {
         Route::get('/quotes/{quote}', [PortalQuoteController::class, 'show'])->whereNumber('quote')->name('portal.quotes.show');
         Route::get('/quotes/{quote}/pdf', [PortalQuoteController::class, 'pdf'])->whereNumber('quote')->name('portal.quotes.pdf');
         Route::post('/quotes/{quote}/respond', [PortalQuoteController::class, 'respond'])->whereNumber('quote')->name('portal.quotes.respond');
+
+        Route::get('/projects', [PortalProjectController::class, 'index'])->name('portal.projects');
+        Route::get('/projects/{project}', [PortalProjectController::class, 'show'])->whereNumber('project')->name('portal.projects.show');
     });
 });
 

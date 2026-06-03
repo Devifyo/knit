@@ -26,6 +26,7 @@ const nav = [
     { label: 'Overview', href: '/portal' },
     { label: 'Deals', href: '/portal/deals' },
     { label: 'Quotes', href: '/portal/quotes' },
+    { label: 'Projects', href: '/portal/projects' },
     { label: 'Tickets', href: '/portal/tickets' },
     { label: 'Profile', href: '/portal/profile' },
 ];
