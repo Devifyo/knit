@@ -9,6 +9,7 @@ use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Lead;
 use App\Models\Pipeline;
+use App\Modules\Portal\Services\PortalInviter;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,7 +29,7 @@ class LeadConversionService
             return ['contact' => $contact, 'deal' => null];
         }
 
-        return DB::transaction(function () use ($lead, $createDeal): array {
+        $result = DB::transaction(function () use ($lead, $createDeal): array {
             [$first, $last] = $this->splitName($lead->name);
 
             $contact = Contact::create([
@@ -75,6 +76,11 @@ class LeadConversionService
 
             return ['contact' => $contact, 'deal' => $deal];
         });
+
+        // Auto-invite the new contact to the customer portal (best-effort email).
+        app(PortalInviter::class)->invite($result['contact']);
+
+        return $result;
     }
 
     /**

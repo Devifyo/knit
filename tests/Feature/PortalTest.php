@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Models\Contact;
 use App\Models\Deal;
+use App\Models\Lead;
 use App\Models\Pipeline;
 use App\Models\Quote;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
+use App\Modules\Leads\Services\LeadConversionService;
 use App\Modules\Portal\Mail\PortalAccessMail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -158,6 +160,19 @@ it('shows a contact only their own projects', function () {
 
     $this->actingAs($alice, 'contact')->get("/portal/projects/{$aliceProject->id}")->assertOk();
     $this->actingAs($alice, 'contact')->get("/portal/projects/{$bobProject->id}")->assertNotFound();
+});
+
+it('auto-invites a converted lead to the portal', function () {
+    Mail::fake();
+    portalWorkspace();
+    $lead = Lead::factory()->create(['name' => 'Dana Prospect', 'email' => 'dana@prospect.test']);
+
+    $result = app(LeadConversionService::class)->convert($lead);
+    $contact = $result['contact']->fresh();
+
+    expect($contact->portal_enabled)->toBeTrue()
+        ->and($contact->portal_token)->not->toBeNull();
+    Mail::assertSent(PortalAccessMail::class, fn (PortalAccessMail $m) => $m->hasTo('dana@prospect.test'));
 });
 
 it('lets a contact open a ticket from the portal', function () {
