@@ -35,6 +35,10 @@ const toggleArea = (group) => {
 };
 const saveRole = () => router.put(`/roles/${selectedRole.value}/permissions`, { permissions: editing.value }, { preserveScroll: true });
 
+// Inline "what does this permission do?" help popover.
+const help = ref(null);
+const toggleHelp = (key) => { help.value = help.value === key ? null : key; };
+
 const selStyle = 'h-10 w-full rounded-[var(--radius-control)] bg-surface px-3 text-sm text-ink ring-1 ring-inset ring-hairline focus:outline-none focus:ring-2 focus:ring-[var(--brand)]';
 const columns = [
     { key: 'name', label: 'Member', sortable: true },
@@ -45,6 +49,8 @@ const columns = [
 
 <template>
     <Head title="Members & Roles" />
+    <!-- closes any open permission help popover -->
+    <div v-if="help" class="fixed inset-0 z-30" @click="help = null" />
     <div class="space-y-5">
         <div class="flex items-center justify-between gap-3">
             <div>
@@ -110,10 +116,19 @@ const columns = [
                             <p class="text-[11px] font-semibold uppercase tracking-wider text-faint">{{ group.area }}</p>
                             <button v-if="canManageRoles" class="text-[11px] font-medium text-[var(--brand)] hover:underline" @click="toggleArea(group)">Toggle</button>
                         </div>
-                        <label v-for="item in group.items" :key="item.key" class="mb-1 flex cursor-pointer items-center gap-2.5 text-sm text-ink-soft">
-                            <input type="checkbox" :value="item.key" v-model="editing" :disabled="!canManageRoles" class="size-4 rounded border-hairline accent-[var(--brand)] disabled:opacity-50" />
-                            {{ item.label }}
-                        </label>
+                        <div v-for="item in group.items" :key="item.key" class="mb-1 flex items-center gap-1.5">
+                            <label class="flex flex-1 cursor-pointer items-center gap-2.5 text-sm text-ink-soft">
+                                <input type="checkbox" :value="item.key" v-model="editing" :disabled="!canManageRoles" class="size-4 shrink-0 rounded border-hairline accent-[var(--brand)] disabled:opacity-50" />
+                                {{ item.label }}
+                            </label>
+                            <span class="relative shrink-0">
+                                <button type="button" :title="item.desc" class="grid size-4 place-items-center rounded-full text-[10px] font-semibold text-faint ring-1 ring-hairline transition-colors hover:bg-sunken hover:text-ink-soft" @click.stop="toggleHelp(item.key)">?</button>
+                                <div v-if="help === item.key" class="absolute right-0 top-full z-40 mt-1.5 w-56 rounded-[var(--radius-control)] border border-hairline bg-surface p-2.5 text-xs leading-relaxed text-ink-soft shadow-e2">
+                                    <p class="mb-0.5 font-mono text-[10px] text-faint">{{ item.key }}</p>
+                                    {{ item.desc }}
+                                </div>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div v-if="canManageRoles" class="mt-5 flex justify-end border-t border-hairline-soft pt-4">
