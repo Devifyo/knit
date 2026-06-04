@@ -8,6 +8,7 @@ const props = defineProps({ contact: Object, customFields: Array, portal: Object
 const { can } = usePermissions();
 
 const portalAction = (action) => router.post(`/contacts/${props.contact.id}/portal-access`, { action }, { preserveScroll: true });
+const impersonate = () => router.post(`/contacts/${props.contact.id}/impersonate`);
 const copyPortalLink = () => props.portal?.activation_url && navigator.clipboard?.writeText(props.portal.activation_url);
 
 const erase = () => {
@@ -87,6 +88,10 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
                             <Button size="sm" variant="secondary" @click="portalAction('reset')">{{ portal.activated ? 'Reset password link' : 'New invite link' }}</Button>
                             <Button size="sm" variant="ghost" class="text-critical" @click="portalAction('disable')">Disable</Button>
                         </template>
+                    </div>
+                    <div v-if="can('contacts.impersonate') && portal.has_email" class="mt-3 border-t border-hairline-soft pt-3">
+                        <Button size="sm" variant="secondary" class="w-full" @click="impersonate">View portal as this customer</Button>
+                        <p class="mt-1.5 text-[11px] text-faint">Opens the portal signed in as them — you'll see exactly what they see.</p>
                     </div>
                 </Card>
             </div>

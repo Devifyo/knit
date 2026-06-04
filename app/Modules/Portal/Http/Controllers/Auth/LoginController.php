@@ -57,4 +57,19 @@ class LoginController extends Controller
 
         return redirect('/portal/login');
     }
+
+    /**
+     * End a staff impersonation session: log out the contact guard only (the
+     * staff web session is untouched) and return to the contact's admin page.
+     */
+    public function stopImpersonating(Request $request): RedirectResponse
+    {
+        abort_unless($request->session()->has('impersonator_user_id'), 403);
+
+        $return = $request->session()->pull('impersonate_return', '/contacts');
+        $request->session()->forget('impersonator_user_id');
+        Auth::guard('contact')->logout();
+
+        return redirect($return);
+    }
 }

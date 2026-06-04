@@ -32,10 +32,19 @@ const nav = [
 ];
 const isActive = (href) => href === '/portal' ? page.url === '/portal' : page.url.startsWith(href);
 const logout = () => router.post('/portal/logout');
+const impersonating = computed(() => page.props.portalAuth?.impersonating);
+const stopImpersonating = () => router.post('/portal/stop-impersonating');
 </script>
 
 <template>
     <div class="min-h-[100dvh] bg-canvas">
+        <!-- Staff impersonation banner -->
+        <div v-if="impersonating" class="flex flex-wrap items-center justify-center gap-2 bg-warning px-4 py-2 text-center text-[13px] font-medium text-white">
+            <svg viewBox="0 0 24 24" fill="none" class="size-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
+            You're viewing the portal as <strong>{{ contact?.name }}</strong>.
+            <button class="ml-1 rounded-md bg-white/20 px-2 py-0.5 font-semibold hover:bg-white/30" @click="stopImpersonating">Exit impersonation</button>
+        </div>
+
         <header class="border-b border-hairline bg-surface">
             <div class="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex items-center gap-2.5">

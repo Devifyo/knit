@@ -34,6 +34,8 @@ class InitContactTenant
                     'name' => $contact->name,
                     'email' => $contact->email,
                 ],
+                // True when a staff member is viewing the portal as this contact.
+                'impersonating' => $request->session()->has('impersonator_user_id'),
             ]);
         }
 

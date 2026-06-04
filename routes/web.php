@@ -93,6 +93,7 @@ Route::prefix('portal')->group(function () {
     Route::middleware(['auth:contact', 'portal.tenant'])->group(function () {
         Route::get('/', [PortalDashboardController::class, 'index'])->name('portal.dashboard');
         Route::post('/logout', [PortalLoginController::class, 'logout'])->name('portal.logout');
+        Route::post('/stop-impersonating', [PortalLoginController::class, 'stopImpersonating'])->name('portal.stop-impersonating');
         Route::get('/profile', [PortalProfileController::class, 'edit'])->name('portal.profile');
         Route::put('/profile', [PortalProfileController::class, 'update'])->name('portal.profile.update');
         Route::get('/tickets', [PortalTicketController::class, 'index'])->name('portal.tickets');
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
         Route::post('/contacts/{contact}/meeting', [MeetingController::class, 'summarize'])->name('contacts.meeting');
         Route::post('/contacts/{contact}/portal-access', [ContactController::class, 'portalAccess'])->name('contacts.portal-access');
     });
+    Route::post('/contacts/{contact}/impersonate', [ContactController::class, 'impersonate'])->middleware('permission:contacts.impersonate')->name('contacts.impersonate');
 
     // Companies
     Route::get('/companies', [CompanyController::class, 'index'])->middleware('permission:companies.view')->name('companies.index');

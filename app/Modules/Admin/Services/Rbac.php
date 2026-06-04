@@ -40,7 +40,7 @@ final class Rbac
             'notes.update',
             'notes.delete',
             // CRM
-            'contacts.view', 'contacts.manage',
+            'contacts.view', 'contacts.manage', 'contacts.impersonate',
             'companies.view', 'companies.manage',
             'leads.view', 'leads.manage', 'leads.convert', 'leads.notify',
             'deals.view', 'deals.manage',
@@ -92,6 +92,7 @@ final class Rbac
         'notes.delete' => 'Delete notes.',
         'contacts.view' => 'View contacts and their timelines.',
         'contacts.manage' => 'Create, edit and delete contacts.',
+        'contacts.impersonate' => 'Sign in to the customer portal as a contact to see exactly what they see.',
         'companies.view' => 'View companies.',
         'companies.manage' => 'Create, edit and delete companies.',
         'leads.view' => 'View leads and the lead pipeline.',

@@ -13,6 +13,7 @@ use App\Models\Deal;
 use App\Modules\Portal\Mail\PortalAccessMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -141,6 +142,23 @@ class ContactController extends Controller
         }
 
         return back()->with('success', 'Portal access enabled.');
+    }
+
+    /**
+     * Sign in to the customer portal AS this contact (impersonation) to see
+     * exactly what they see. Staff stay logged into the app (web guard); only the
+     * separate `contact` guard is logged in, marked so the portal shows an exit
+     * banner. Permission-gated.
+     */
+    public function impersonate(Request $request, Contact $contact): RedirectResponse
+    {
+        abort_unless($request->user()->can('contacts.impersonate'), 403);
+
+        Auth::guard('contact')->login($contact);
+        $request->session()->put('impersonator_user_id', $request->user()->id);
+        $request->session()->put('impersonate_return', "/contacts/{$contact->id}");
+
+        return redirect('/portal');
     }
 
     public function store(Request $request): RedirectResponse
