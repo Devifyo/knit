@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
 use App\Services\AI\GeminiService;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\PermissionRegistrar;
 
 /** @return array{0: Tenant, 1: User} */
@@ -56,6 +57,29 @@ it('records the capture URL a public lead came from', function () {
         ->and($lead->source_url)->toContain('/f/'.$tenant->slug)
         ->and($lead->score)->toBeGreaterThan(0);
     tenancy()->end();
+});
+
+it('re-scores an unchanged lead consistently (cached by stable signals)', function () {
+    [$tenant] = leadWorkspace();
+    $tenant->update(['ai_enabled' => true]);
+
+    Http::fake([
+        '*' => Http::response([
+            'candidates' => [['content' => ['parts' => [['text' => '{"score":77,"reasons":["Work email","Engaged"]}']]]]],
+            'usageMetadata' => ['totalTokenCount' => 10],
+        ]),
+    ]);
+    $ai = new GeminiService(enabled: true, apiKey: 'test-key', model: 'gemini-2.5-flash');
+    $lead = Lead::factory()->create(['email' => 'cto@enterprise.com', 'phone' => '555', 'source' => 'Capture form', 'score' => 0]);
+
+    $first = $ai->scoreLead($lead);
+    // Persist the result (this previously changed the cache key on the next run).
+    $lead->forceFill(['score' => $first['score'], 'custom_fields' => ['ai_reasons' => $first['reasons']]])->save();
+    $second = $ai->scoreLead($lead->fresh());
+
+    expect($first['score'])->toBe(77)
+        ->and($second['score'])->toBe(77);
+    Http::assertSentCount(1); // 2nd score served from cache, not re-queried
 });
 
 it('shows a lead detail page', function () {

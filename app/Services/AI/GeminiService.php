@@ -33,9 +33,18 @@ class GeminiService
     /** @return array{score:int, reasons:array<int,string>} */
     public function scoreLead(object $lead): array
     {
-        $data = $this->attrs($lead, ['name', 'email', 'phone', 'source', 'status', 'score', 'custom_fields']);
+        // Score from STABLE lead signals only. Deliberately excludes the lead's
+        // own `score` and `custom_fields` (which hold prior AI reasons): feeding
+        // those back in would change the cache key on every run and bias the
+        // model, so re-scoring an unchanged lead would yield a different number.
+        $data = $this->attrs($lead, ['name', 'email', 'phone', 'source', 'status']);
+        $custom = (array) ($this->attrs($lead, ['custom_fields'])['custom_fields'] ?? []);
+        if (! empty($custom['message'])) {
+            $data['message'] = $custom['message'];
+        }
 
-        return $this->run('lead.score', $lead, $data,
+        // Cache key = the stable $data (1st), audit entity = $lead (2nd).
+        return $this->run('lead.score', $data, $lead,
             'You are a B2B sales lead-scoring assistant. Score this lead 0-100 (higher = more likely to convert) '
             .'and give 2-4 short reasons. Return JSON {"score": int, "reasons": string[]}. Lead: '.json_encode($data),
             fn ($d) => ['score' => (int) max(0, min(100, $d['score'] ?? 0)), 'reasons' => array_slice((array) ($d['reasons'] ?? []), 0, 4)],
@@ -106,7 +115,7 @@ class GeminiService
     {
         $data = $this->attrs($deal, ['name', 'amount', 'currency', 'status', 'probability']);
 
-        return $this->run('deal.next_action', $deal, $data,
+        return $this->run('deal.next_action', $data, $deal,
             'You are a sales coach. Given this deal, recommend the single best next action and a one-sentence rationale. '
             .'Return JSON {"action": string, "rationale": string}. Deal: '.json_encode($data),
             fn ($d) => ['action' => (string) ($d['action'] ?? 'review'), 'rationale' => (string) ($d['rationale'] ?? '')],
@@ -120,7 +129,7 @@ class GeminiService
     {
         $data = $this->attrs($deal, ['name', 'amount', 'status', 'probability', 'expected_close_date']);
 
-        return $this->run('deal.risk', $deal, $data,
+        return $this->run('deal.risk', $data, $deal,
             'Assess the risk this deal is lost. Return JSON {"risk": "low"|"medium"|"high", "factors": string[]}. Deal: '.json_encode($data),
             fn ($d) => ['risk' => (string) ($d['risk'] ?? 'low'), 'factors' => array_slice((array) ($d['factors'] ?? []), 0, 5)],
             ['risk' => 'low', 'factors' => []],
@@ -136,7 +145,7 @@ class GeminiService
     {
         $data = array_map(fn ($d) => $this->attrs($d, ['amount', 'probability', 'expected_close_date', 'status']), $deals);
 
-        return $this->run('revenue.forecast', $deals, $data,
+        return $this->run('revenue.forecast', $data, $deals,
             'Forecast weighted revenue by month from these deals (amounts are minor units). '
             .'Return JSON {"by_month": {"YYYY-MM": int}, "confidence": number 0-1}. Deals: '.json_encode($data),
             fn ($d) => ['by_month' => (array) ($d['by_month'] ?? []), 'confidence' => (float) ($d['confidence'] ?? 0)],
@@ -149,7 +158,7 @@ class GeminiService
     {
         $data = $this->attrs($ticket, ['subject', 'body', 'priority', 'status']);
 
-        return $this->run('ticket.summary', $ticket, $data,
+        return $this->run('ticket.summary', $data, $ticket,
             'Summarize this support ticket in 1-2 sentences for an agent. Ticket: '.json_encode($data),
             fn ($t) => trim((string) $t),
             '',
@@ -161,7 +170,7 @@ class GeminiService
     {
         $data = $this->attrs($ticket, ['subject', 'body', 'priority']);
 
-        return $this->run('ticket.reply', $ticket, $data,
+        return $this->run('ticket.reply', $data, $ticket,
             'Suggest 2 short, friendly agent reply drafts for this ticket. Return JSON {"replies": string[]}. Ticket: '.json_encode($data),
             fn ($d) => array_slice((array) ($d['replies'] ?? []), 0, 3),
             [],
@@ -234,7 +243,7 @@ class GeminiService
     {
         $data = $this->attrs($account, ['health_score', 'renewal_date', 'renewal_status']);
 
-        return $this->run('account.churn', $account, $data,
+        return $this->run('account.churn', $data, $account,
             'Estimate churn probability (0-1) and key drivers. Return JSON {"probability": number, "drivers": string[]}. Account: '.json_encode($data),
             fn ($d) => ['probability' => (float) ($d['probability'] ?? 0), 'drivers' => array_slice((array) ($d['drivers'] ?? []), 0, 5)],
             ['probability' => 0.0, 'drivers' => []],
@@ -246,7 +255,7 @@ class GeminiService
     {
         $data = $this->attrs($entity, ['name', 'health_score', 'annual_revenue', 'industry']);
 
-        return $this->run('health.score', $entity, $data,
+        return $this->run('health.score', $data, $entity,
             'Score this account\'s health 0-100. Return JSON {"score": int}. Account: '.json_encode($data),
             fn ($d) => (int) max(0, min(100, $d['score'] ?? 50)),
             50,
