@@ -164,7 +164,9 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
     Route::get('/leads', [LeadController::class, 'index'])->middleware('permission:leads.view')->name('leads.index');
     Route::get('/leads/{lead}', [LeadController::class, 'show'])->middleware('permission:leads.view')->name('leads.show');
     Route::post('/leads', [LeadController::class, 'store'])->middleware('permission:leads.manage')->name('leads.store');
+    Route::patch('/leads/{lead}/move', [LeadController::class, 'move'])->middleware('permission:leads.manage')->name('leads.move');
     Route::post('/leads/{lead}/convert', [LeadController::class, 'convert'])->middleware('permission:leads.convert')->name('leads.convert');
+    Route::post('/leads/{lead}/convert-project', [LeadController::class, 'convertToProject'])->middleware('permission:leads.convert')->name('leads.convert-project');
     Route::post('/leads/{lead}/score', [LeadController::class, 'score'])->middleware('permission:leads.manage')->name('leads.score');
 
     // Deals

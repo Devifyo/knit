@@ -6,6 +6,7 @@ namespace App\Modules\Leads\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
+use App\Models\Project;
 use App\Modules\Leads\Jobs\ScoreLeadJob;
 use App\Modules\Leads\Services\LeadConversionService;
 use App\Services\AI\GeminiService;
@@ -120,5 +121,37 @@ class LeadController extends Controller
 
         return redirect("/contacts/{$result['contact']->id}")
             ->with('success', 'Lead converted to contact'.($result['deal'] ? ' + deal.' : '.'));
+    }
+
+    /** Move a lead between pipeline stages (kanban drag). */
+    public function move(Request $request, Lead $lead): RedirectResponse
+    {
+        $data = $request->validate(['status' => ['required', 'in:new,working,qualified,unqualified']]);
+        $lead->update(['status' => $data['status']]);
+
+        return back()->with('success', 'Lead moved to '.$data['status'].'.');
+    }
+
+    /**
+     * Convert a lead straight into a delivery project — it becomes a contact (+ deal)
+     * and a project linked to that customer, so won work flows into delivery in one step.
+     */
+    public function convertToProject(Request $request, Lead $lead, LeadConversionService $service): RedirectResponse
+    {
+        abort_unless($request->user()->can('projects.manage'), 403);
+
+        $result = $service->convert($lead);
+        $contact = $result['contact'];
+
+        $project = Project::create([
+            'name' => $contact->name.' — delivery',
+            'description' => 'Created from lead “'.$lead->name.'”.',
+            'owner_id' => $request->user()->id,
+            'deal_id' => $result['deal']?->id,
+            'company_id' => $contact->company_id,
+            'contact_id' => $contact->id,
+        ]);
+
+        return redirect("/projects/{$project->id}")->with('success', 'Lead converted to a project.');
     }
 }

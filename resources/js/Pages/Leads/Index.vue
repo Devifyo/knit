@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Button, Input, DataTable, Tag, Modal } from '@/Components/ui';
+import { Button, Input, DataTable, Tag, Modal, Kanban } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useToastStore } from '@/Stores/toast';
 
 const props = defineProps({ leads: Array, captureUrl: String });
 const { can } = usePermissions();
+const toast = useToastStore();
 
 const copyCapture = () => navigator.clipboard?.writeText(props.captureUrl);
 
@@ -16,6 +18,33 @@ const submit = () => form.post('/leads', { preserveScroll: true, onSuccess: () =
 const convert = (id) => router.post(`/leads/${id}/convert`);
 const scoreAi = (id) => router.post(`/leads/${id}/score`, {}, { preserveScroll: true });
 
+// ---- View toggle (board default) ----
+const view = ref(localStorage.getItem('knit-leads-view') || 'board');
+const setView = (v) => { view.value = v; localStorage.setItem('knit-leads-view', v); };
+
+// ---- Kanban pipeline by stage ----
+const stages = [
+    { id: 'new', title: 'New' },
+    { id: 'working', title: 'Working' },
+    { id: 'qualified', title: 'Qualified' },
+    { id: 'unqualified', title: 'Unqualified' },
+];
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const buildColumns = () => stages.map((s) => ({
+    id: s.id,
+    title: s.title,
+    cards: props.leads.filter((l) => !l.converted && l.status === s.id),
+}));
+const board = ref(buildColumns());
+watch(() => props.leads, () => { board.value = buildColumns(); });
+
+function onCardMoved({ card, toColumn }) {
+    router.patch(`/leads/${card.id}/move`, { status: toColumn }, {
+        preserveScroll: true, preserveState: true,
+        onError: () => { toast.error('Could not move lead'); router.reload({ only: ['leads'] }); },
+    });
+}
+
 const columns = [
     { key: 'name', label: 'Lead', sortable: true },
     { key: 'email', label: 'Email' },
@@ -25,17 +54,24 @@ const columns = [
     { key: 'actions', label: '', align: 'right' },
 ];
 const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'positive', unqualified: 'neutral' }[s] ?? 'neutral');
+const scoreTone = (v) => v >= 60 ? 'text-positive' : v >= 30 ? 'text-warning' : 'text-muted';
 </script>
 
 <template>
     <Head title="Leads" />
     <div class="space-y-5">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold tracking-[-0.02em] text-ink">Leads</h1>
                 <p class="mt-1 text-sm text-muted">Capture, qualify and convert</p>
             </div>
-            <Button v-if="can('leads.manage')" @click="open = true">Capture lead</Button>
+            <div class="flex items-center gap-2">
+                <div class="flex rounded-[var(--radius-control)] bg-sunken p-0.5 ring-1 ring-hairline">
+                    <button :class="['rounded-[6px] px-2.5 py-1 text-[13px] font-medium transition-colors', view === 'board' ? 'bg-surface text-ink shadow-e1' : 'text-muted hover:text-ink']" @click="setView('board')">Board</button>
+                    <button :class="['rounded-[6px] px-2.5 py-1 text-[13px] font-medium transition-colors', view === 'list' ? 'bg-surface text-ink shadow-e1' : 'text-muted hover:text-ink']" @click="setView('list')">List</button>
+                </div>
+                <Button v-if="can('leads.manage')" @click="open = true">Capture lead</Button>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 rounded-[var(--radius-card)] border border-hairline bg-surface px-4 py-3 text-sm shadow-e1">
@@ -45,7 +81,25 @@ const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'posit
             <span class="text-xs text-faint">Submissions create a lead and fire your <code>lead.created</code> workflows.</span>
         </div>
 
-        <DataTable :columns="columns" :rows="leads" empty-title="No leads yet" empty-description="Capture your first lead to start the pipeline.">
+        <!-- Board (pipeline) -->
+        <Kanban v-if="view === 'board'" :columns="board" @card-moved="onCardMoved">
+            <template #card="{ card }">
+                <div class="space-y-2">
+                    <div class="flex items-start justify-between gap-2">
+                        <Link :href="`/leads/${card.id}`" class="text-sm font-medium text-ink hover:text-[var(--brand)]">{{ card.name }}</Link>
+                        <span class="nums shrink-0 text-xs font-semibold" :class="scoreTone(card.score)">{{ card.score }}</span>
+                    </div>
+                    <p v-if="card.email" class="truncate text-xs text-muted">{{ card.email }}</p>
+                    <div class="flex items-center justify-between pt-0.5">
+                        <span class="text-[11px] text-faint">{{ card.source || '—' }}</span>
+                        <Link v-if="can('leads.convert')" :href="`/leads/${card.id}`" class="text-[11px] font-medium text-[var(--brand)] hover:underline">Open →</Link>
+                    </div>
+                </div>
+            </template>
+        </Kanban>
+
+        <!-- List -->
+        <DataTable v-else :columns="columns" :rows="leads" empty-title="No leads yet" empty-description="Capture your first lead to start the pipeline.">
             <template #cell:name="{ row }">
                 <Link :href="`/leads/${row.id}`" class="font-medium text-ink hover:text-[var(--brand)] hover:underline">{{ row.name }}</Link>
             </template>
@@ -58,7 +112,7 @@ const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'posit
                 </div>
             </template>
             <template #cell:score="{ value }">
-                <span class="nums" :class="value >= 60 ? 'text-positive' : value >= 30 ? 'text-warning' : 'text-muted'">{{ value }}</span>
+                <span class="nums" :class="scoreTone(value)">{{ value }}</span>
             </template>
             <template #cell:status="{ row }">
                 <Tag v-if="row.converted" size="sm" color="positive" dot>converted</Tag>

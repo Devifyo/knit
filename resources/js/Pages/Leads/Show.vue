@@ -8,6 +8,7 @@ const { can } = usePermissions();
 
 const scoreAi = () => router.post(`/leads/${props.lead.id}/score`, {}, { preserveScroll: true });
 const convert = () => router.post(`/leads/${props.lead.id}/convert`);
+const convertToProject = () => router.post(`/leads/${props.lead.id}/convert-project`);
 
 const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'positive', unqualified: 'neutral' }[s] ?? 'neutral');
 const scoreTone = (v) => v >= 60 ? 'text-positive' : v >= 30 ? 'text-warning' : 'text-muted';
@@ -33,7 +34,10 @@ const typeColor = { note: 'neutral', call: 'info', email: 'brand', meeting: 'war
             </div>
             <div class="flex gap-2">
                 <Button v-if="can('leads.manage')" variant="secondary" @click="scoreAi">Re-score with AI</Button>
-                <Button v-if="!lead.converted && can('leads.convert')" @click="convert">Convert to contact</Button>
+                <template v-if="!lead.converted && can('leads.convert')">
+                    <Button v-if="can('projects.manage')" variant="secondary" @click="convertToProject">Convert to project</Button>
+                    <Button @click="convert">Convert to contact</Button>
+                </template>
                 <Link v-if="lead.converted && lead.contact_id" :href="`/contacts/${lead.contact_id}`">
                     <Button variant="secondary">View contact</Button>
                 </Link>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Lead;
+use App\Models\Project;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
@@ -91,6 +92,32 @@ it('shows a lead detail page', function () {
         ->assertInertia(fn ($p) => $p->component('Leads/Show', false)
             ->where('lead.name', 'Jordan Lead')
             ->where('lead.source_url', 'https://x.test/f/acme'));
+});
+
+it('moves a lead across pipeline stages (kanban)', function () {
+    [, $owner] = leadWorkspace();
+    $lead = Lead::factory()->create(['status' => 'new', 'assigned_user_id' => $owner->id]);
+
+    $this->actingAs($owner)->patch("/leads/{$lead->id}/move", ['status' => 'qualified'])
+        ->assertRedirect();
+
+    expect($lead->fresh()->status)->toBe('qualified');
+
+    $this->actingAs($owner)->patch("/leads/{$lead->id}/move", ['status' => 'bogus'])
+        ->assertSessionHasErrors('status');
+});
+
+it('converts a lead directly into a project', function () {
+    [, $owner] = leadWorkspace();
+    $lead = Lead::factory()->create(['name' => 'Dana Prospect', 'email' => 'dana@bigco.com', 'assigned_user_id' => $owner->id]);
+
+    $this->actingAs($owner)->post("/leads/{$lead->id}/convert-project")
+        ->assertRedirect();
+
+    $project = Project::first();
+    expect($project)->not->toBeNull()
+        ->and($project->contact_id)->not->toBeNull()
+        ->and($lead->fresh()->isConverted())->toBeTrue();
 });
 
 it('isolates lead detail across tenants', function () {
