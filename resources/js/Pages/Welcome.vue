@@ -36,9 +36,12 @@ const inStage = (s) => deals.value.filter((d) => d.stage === s);
 const fmt = (n) => '$' + (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
 const openValue = computed(() => deals.value.filter((d) => d.stage < 2).reduce((a, d) => a + d.amt, 0));
 
-let ptr = 2, timer = null;
+let ptr = 2, timer = null, boardIO = null, boardVisible = true;
+const productEl = ref(null);
 const advance = () => {
-    // move one card forward through the funnel; recycle Won → New so it loops.
+    // Skip work when the board is off-screen or the tab is hidden — keeps mobile
+    // smooth (no continuous layout/paint when you've scrolled past the hero).
+    if (!boardVisible || document.hidden) return;
     const d = deals.value[ptr % deals.value.length];
     d.stage = (d.stage + 1) % 3;
     ptr++;
@@ -46,8 +49,10 @@ const advance = () => {
 onMounted(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     timer = setInterval(advance, 2100);
+    boardIO = new IntersectionObserver(([e]) => { boardVisible = e.isIntersecting; }, { threshold: 0.05 });
+    if (productEl.value) boardIO.observe(productEl.value);
 });
-onUnmounted(() => timer && clearInterval(timer));
+onUnmounted(() => { timer && clearInterval(timer); boardIO && boardIO.disconnect(); });
 
 const navMock = [
     { label: 'Dashboard', d: 'M4 13h6V4H4v9zm10 7h6v-9h-6v9z' },
@@ -85,7 +90,7 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
 
     <div class="min-h-[100dvh] bg-canvas text-ink">
         <!-- NAV -->
-        <header :class="['fixed inset-x-0 top-0 z-50 transition-all duration-300', scrolled ? 'border-b border-hairline bg-surface/75 backdrop-blur-xl' : 'border-b border-transparent']">
+        <header :class="['fixed inset-x-0 top-0 z-50 transition-all duration-300', scrolled ? 'border-b border-hairline bg-surface/95 lg:bg-surface/75 lg:backdrop-blur-xl' : 'border-b border-transparent']">
             <div class="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-5 lg:px-8">
                 <div class="flex items-center gap-2.5">
                     <span class="grid size-8 place-items-center rounded-xl text-sm font-bold text-white shadow-e1" :style="{ background: 'var(--brand)' }">{{ appName[0] }}</span>
@@ -112,7 +117,7 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
             </div>
 
             <div class="mx-auto max-w-[760px] text-center">
-                <span class="rise inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/70 px-3 py-1 text-xs font-medium text-muted backdrop-blur" style="animation-delay:.04s">
+                <span class="rise inline-flex items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-1 text-xs font-medium text-muted lg:bg-surface/70 lg:backdrop-blur" style="animation-delay:.04s">
                     <span class="relative flex size-1.5"><span class="absolute inline-flex size-full animate-ping rounded-full opacity-60" :style="{ background: 'var(--brand)' }" /><span class="relative inline-flex size-1.5 rounded-full" :style="{ background: 'var(--brand)' }" /></span>
                     One workspace · 12 connected modules
                 </span>
@@ -133,7 +138,7 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
             </div>
 
             <!-- Product window with a LIVE pipeline -->
-            <div id="product" class="rise mx-auto mt-14 max-w-[1040px]" style="animation-delay:.32s">
+            <div id="product" ref="productEl" class="rise mx-auto mt-14 max-w-[1040px]" style="animation-delay:.32s">
               <div class="float">
                 <div class="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-e3">
                     <div class="flex items-center gap-1.5 border-b border-hairline-soft px-4 py-2.5">
@@ -417,6 +422,14 @@ const groupIcon = (i) => ['M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21a6 6 0 0112 0', 
 .aurora-b { top: 60px; left: -140px; width: 400px; height: 400px; background: #8b5cf6; opacity: 0.12; animation: drift-b 24s ease-in-out infinite; }
 @keyframes drift-a { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px, 36px); } }
 @keyframes drift-b { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px, -24px); } }
+
+/* Mobile: heavy GPU blur + perpetual compositing tanks paint/scroll. Keep one
+   light static glow, drop the rest. */
+@media (max-width: 768px) {
+    .aurora { animation: none !important; filter: blur(44px); opacity: 0.10; }
+    .aurora-b { display: none; }
+    .float { animation: none !important; }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .rise, .float, .aurora { animation: none; }
