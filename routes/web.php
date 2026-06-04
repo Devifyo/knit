@@ -265,7 +265,9 @@ Route::middleware(['auth', 'tenant', 'ip.allow', '2fa.enforce'])->group(function
     // Workspace admin
     Route::get('/members', [MemberController::class, 'index'])->middleware('permission:members.view')->name('members.index');
     Route::post('/members/invite', [MemberController::class, 'invite'])->middleware('permission:members.invite')->name('members.invite');
+    Route::post('/members', [MemberController::class, 'store'])->middleware('permission:members.invite')->name('members.store');
     Route::delete('/invitations/{invitation}', [MemberController::class, 'revokeInvite'])->middleware('permission:members.invite')->name('invitations.revoke');
+    Route::put('/roles/{role}/permissions', [MemberController::class, 'updateRolePermissions'])->middleware('permission:roles.manage')->name('roles.permissions.update');
     Route::get('/settings/branding', [BrandingController::class, 'edit'])->name('settings.branding');
     Route::put('/settings/branding', [BrandingController::class, 'update'])->middleware('permission:branding.update')->name('settings.branding.update');
 

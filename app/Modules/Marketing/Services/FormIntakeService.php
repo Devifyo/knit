@@ -8,6 +8,7 @@ use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\Lead;
 use App\Modules\Automation\Services\WorkflowEngine;
+use App\Modules\Leads\Jobs\NotifyNewLeadJob;
 use App\Modules\Leads\Jobs\ScoreLeadJob;
 use App\Services\AI\GeminiService;
 
@@ -47,6 +48,7 @@ class FormIntakeService
                 'custom_fields' => $payload,
             ]);
             ScoreLeadJob::dispatch((string) tenant('id'), $lead->id);
+            NotifyNewLeadJob::dispatch((string) tenant('id'), $lead->id);
         }
 
         FormSubmission::create(['form_id' => $form->id, 'lead_id' => $lead->id, 'payload' => $payload]);

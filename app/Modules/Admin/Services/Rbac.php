@@ -42,7 +42,7 @@ final class Rbac
             // CRM
             'contacts.view', 'contacts.manage',
             'companies.view', 'companies.manage',
-            'leads.view', 'leads.manage', 'leads.convert',
+            'leads.view', 'leads.manage', 'leads.convert', 'leads.notify',
             'deals.view', 'deals.manage',
             'accounts.view', 'accounts.manage',
             // Automation & CPQ
@@ -69,6 +69,34 @@ final class Rbac
         ];
     }
 
+    /** Friendly names for permission areas that don't humanize cleanly. */
+    private const AREA_LABELS = [
+        'kb' => 'Knowledge base',
+        'crm' => 'CRM',
+        'roles' => 'Roles',
+    ];
+
+    /**
+     * Permissions grouped by area with human labels — drives the role editor UI.
+     *
+     * @return array<int, array{area: string, items: array<int, array{key: string, label: string}>}>
+     */
+    public static function permissionGroups(): array
+    {
+        $groups = [];
+        foreach (self::permissions() as $perm) {
+            [$area, $action] = array_pad(explode('.', $perm, 2), 2, '');
+            $groups[$area][] = ['key' => $perm, 'label' => ucfirst(str_replace('_', ' ', $action ?: $perm))];
+        }
+
+        $out = [];
+        foreach ($groups as $area => $items) {
+            $out[] = ['area' => self::AREA_LABELS[$area] ?? ucfirst(str_replace('_', ' ', $area)), 'items' => $items];
+        }
+
+        return $out;
+    }
+
     /**
      * Role → permissions map. Owner implicitly gets everything via a Gate
      * before-check, but we still attach the full set for clarity.
@@ -88,7 +116,7 @@ final class Rbac
                 'notes.view', 'notes.create', 'notes.update', 'notes.delete',
                 'contacts.view', 'contacts.manage',
                 'companies.view', 'companies.manage',
-                'leads.view', 'leads.manage', 'leads.convert',
+                'leads.view', 'leads.manage', 'leads.convert', 'leads.notify',
                 'deals.view', 'deals.manage',
                 'accounts.view', 'accounts.manage',
                 'workflows.view', 'workflows.manage',

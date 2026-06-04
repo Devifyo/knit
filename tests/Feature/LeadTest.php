@@ -7,8 +7,11 @@ use App\Models\Project;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Admin\Services\WorkspaceProvisioner;
+use App\Modules\Leads\Mail\LeadReceivedMail;
+use App\Modules\Leads\Mail\NewLeadMail;
 use App\Services\AI\GeminiService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\PermissionRegistrar;
 
 /** @return array{0: Tenant, 1: User} */
@@ -118,6 +121,20 @@ it('converts a lead directly into a project', function () {
     expect($project)->not->toBeNull()
         ->and($project->contact_id)->not->toBeNull()
         ->and($lead->fresh()->isConverted())->toBeTrue();
+});
+
+it('emails the submitter a confirmation and alerts members with leads.notify', function () {
+    Mail::fake();
+    [$tenant, $owner] = leadWorkspace(); // owner has every permission (incl. leads.notify)
+    tenancy()->end();
+
+    $this->post("/f/{$tenant->slug}", ['name' => 'Web Visitor', 'email' => 'visitor@corp.com'])
+        ->assertRedirect();
+
+    Mail::assertSent(LeadReceivedMail::class,
+        fn ($m) => $m->hasTo('visitor@corp.com'));
+    Mail::assertSent(NewLeadMail::class,
+        fn ($m) => $m->hasTo($owner->email));
 });
 
 it('isolates lead detail across tenants', function () {

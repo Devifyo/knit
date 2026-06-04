@@ -7,6 +7,7 @@ namespace App\Modules\Leads\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\Tenant;
+use App\Modules\Leads\Jobs\NotifyNewLeadJob;
 use App\Modules\Leads\Jobs\ScoreLeadJob;
 use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,7 @@ class LeadCaptureController extends Controller
                     'custom_fields' => ! empty($data['message']) ? ['message' => $data['message']] : null,
                 ]);
                 ScoreLeadJob::dispatch((string) $tenant->getTenantKey(), $lead->id);
+                NotifyNewLeadJob::dispatch((string) $tenant->getTenantKey(), $lead->id);
             }
         } finally {
             tenancy()->end();
