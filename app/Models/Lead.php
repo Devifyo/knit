@@ -22,7 +22,7 @@ class Lead extends Model implements AuditableContract, TenantOwned
 
     /** @var list<string> */
     protected $fillable = [
-        'name', 'email', 'phone', 'source', 'status', 'score',
+        'name', 'email', 'phone', 'source', 'source_url', 'status', 'score',
         'assigned_user_id', 'pipeline_id', 'converted_to_contact_id',
         'converted_at', 'custom_fields',
     ];

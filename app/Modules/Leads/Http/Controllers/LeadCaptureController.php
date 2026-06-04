@@ -7,6 +7,8 @@ namespace App\Modules\Leads\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\Tenant;
+use App\Modules\Leads\Jobs\ScoreLeadJob;
+use App\Services\AI\GeminiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -44,15 +46,20 @@ class LeadCaptureController extends Controller
         try {
             // Dedupe on email within the workspace.
             if (! Lead::where('email', $data['email'])->exists()) {
-                Lead::create([
+                $payload = [
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'phone' => $data['phone'] ?? null,
                     'source' => 'Capture form',
+                    'source_url' => url('/f/'.$tenant->slug),
+                ];
+                $lead = Lead::create([
+                    ...$payload,
                     'status' => 'new',
-                    'score' => 40,
-                    'custom_fields' => $data['message'] ? ['message' => $data['message']] : null,
+                    'score' => app(GeminiService::class)->heuristicLeadScore($payload),
+                    'custom_fields' => ! empty($data['message']) ? ['message' => $data['message']] : null,
                 ]);
+                ScoreLeadJob::dispatch((string) $tenant->getTenantKey(), $lead->id);
             }
         } finally {
             tenancy()->end();

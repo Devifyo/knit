@@ -24,6 +24,7 @@ it('degrades AI gracefully to a safe fallback when disabled', function () {
     $result = app(GeminiService::class)->scoreLead($lead);
 
     expect($result)->toHaveKeys(['score', 'reasons'])
-        ->and($result['score'])->toBe(0)
+        ->and($result['score'])->toBeGreaterThan(0)   // signal-based fallback, not a flat default
+        ->and($result['score'])->toBeLessThanOrEqual(100)
         ->and($result['reasons'])->toBeArray();
 });

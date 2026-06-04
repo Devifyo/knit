@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Button, Input, DataTable, Tag, Modal } from '@/Components/ui';
 import { usePermissions } from '@/Composables/usePermissions';
 
@@ -46,6 +46,17 @@ const statusColor = (s) => ({ new: 'info', working: 'warning', qualified: 'posit
         </div>
 
         <DataTable :columns="columns" :rows="leads" empty-title="No leads yet" empty-description="Capture your first lead to start the pipeline.">
+            <template #cell:name="{ row }">
+                <Link :href="`/leads/${row.id}`" class="font-medium text-ink hover:text-[var(--brand)] hover:underline">{{ row.name }}</Link>
+            </template>
+            <template #cell:source="{ row }">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-ink-soft">{{ row.source || '—' }}</span>
+                    <a v-if="row.source_url" :href="row.source_url" target="_blank" :title="row.source_url" class="text-faint hover:text-[var(--brand)]" @click.stop>
+                        <svg viewBox="0 0 24 24" fill="none" class="size-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+                    </a>
+                </div>
+            </template>
             <template #cell:score="{ value }">
                 <span class="nums" :class="value >= 60 ? 'text-positive' : value >= 30 ? 'text-warning' : 'text-muted'">{{ value }}</span>
             </template>

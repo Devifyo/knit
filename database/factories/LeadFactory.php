@@ -15,13 +15,18 @@ class LeadFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
+        $source = fake()->randomElement(['Capture form', 'Referral', 'Website', 'Event']);
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
-            'source' => fake()->randomElement(['Website', 'Referral', 'Event']),
+            'source' => $source,
+            'source_url' => in_array($source, ['Capture form', 'Website'], true)
+                ? rtrim((string) config('app.url'), '/').'/f/acme-inc'
+                : null,
             'status' => fake()->randomElement(['new', 'working', 'qualified']),
-            'score' => fake()->numberBetween(0, 100),
+            'score' => fake()->numberBetween(18, 95),
         ];
     }
 }

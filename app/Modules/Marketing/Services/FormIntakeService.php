@@ -8,6 +8,8 @@ use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\Lead;
 use App\Modules\Automation\Services\WorkflowEngine;
+use App\Modules\Leads\Jobs\ScoreLeadJob;
+use App\Services\AI\GeminiService;
 
 /**
  * Handles a public marketing-form submission: creates a linked Lead (which fires
@@ -29,16 +31,23 @@ class FormIntakeService
         $email = $payload['email'] ?? null;
 
         // Dedupe on email within the workspace.
-        $lead = ($email ? Lead::where('email', $email)->first() : null)
-            ?? Lead::create([
+        $lead = $email ? Lead::where('email', $email)->first() : null;
+        if (! $lead) {
+            $attrs = [
                 'name' => $name,
                 'email' => $email,
                 'phone' => $payload['phone'] ?? null,
                 'source' => 'Form: '.$form->name,
+                'source_url' => url('/forms/'.$form->slug),
+            ];
+            $lead = Lead::create([
+                ...$attrs,
                 'status' => 'new',
-                'score' => $email ? 40 : 10,
+                'score' => app(GeminiService::class)->heuristicLeadScore($attrs),
                 'custom_fields' => $payload,
             ]);
+            ScoreLeadJob::dispatch((string) tenant('id'), $lead->id);
+        }
 
         FormSubmission::create(['form_id' => $form->id, 'lead_id' => $lead->id, 'payload' => $payload]);
         $form->increment('submissions_count');

@@ -21,6 +21,9 @@ use Throwable;
  */
 class GeminiService
 {
+    /** Consumer email providers — used to detect work emails when scoring leads. */
+    private const FREE_EMAIL = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com', 'proton.me', 'live.com'];
+
     public function __construct(
         protected readonly bool $enabled = false,
         protected readonly ?string $apiKey = null,
@@ -36,9 +39,66 @@ class GeminiService
             'You are a B2B sales lead-scoring assistant. Score this lead 0-100 (higher = more likely to convert) '
             .'and give 2-4 short reasons. Return JSON {"score": int, "reasons": string[]}. Lead: '.json_encode($data),
             fn ($d) => ['score' => (int) max(0, min(100, $d['score'] ?? 0)), 'reasons' => array_slice((array) ($d['reasons'] ?? []), 0, 4)],
-            ['score' => 0, 'reasons' => ['AI scoring is off for this workspace.']],
+            // When AI is off (or fails), fall back to a transparent signal-based
+            // score rather than a flat default — every lead gets a meaningful number.
+            ['score' => $this->heuristicLeadScore($data), 'reasons' => $this->heuristicLeadReasons($data)],
             json: true,
         );
+    }
+
+    /**
+     * Cheap, deterministic lead score from available signals — used for the
+     * immediate score on capture and as the AI fallback. Never a flat default.
+     *
+     * @param  array<string, mixed>  $d
+     */
+    public function heuristicLeadScore(array $d): int
+    {
+        $score = 25;
+        $email = strtolower(trim((string) ($d['email'] ?? '')));
+        if ($email !== '') {
+            $score += 15;
+            $domain = substr((string) strrchr($email, '@'), 1);
+            if ($domain !== '' && ! in_array($domain, self::FREE_EMAIL, true)) {
+                $score += 25; // work email = stronger buying signal
+            }
+        }
+        if (! empty($d['phone'])) {
+            $score += 12;
+        }
+        $source = strtolower((string) ($d['source'] ?? ''));
+        if (str_contains($source, 'referral')) {
+            $score += 20;
+        } elseif (str_contains($source, 'form') || str_contains($source, 'capture')) {
+            $score += 13;
+        }
+
+        return max(0, min(100, $score));
+    }
+
+    /**
+     * @param  array<string, mixed>  $d
+     * @return array<int, string>
+     */
+    private function heuristicLeadReasons(array $d): array
+    {
+        $reasons = [];
+        $email = strtolower(trim((string) ($d['email'] ?? '')));
+        $domain = $email !== '' ? substr((string) strrchr($email, '@'), 1) : '';
+        if ($domain !== '' && ! in_array($domain, self::FREE_EMAIL, true)) {
+            $reasons[] = 'Work email domain ('.$domain.')';
+        } elseif ($email !== '') {
+            $reasons[] = 'Personal email address';
+        }
+        if (! empty($d['phone'])) {
+            $reasons[] = 'Phone number provided';
+        }
+        if (! empty($d['source'])) {
+            $reasons[] = 'Source: '.$d['source'];
+        }
+        $reasons[] = 'Scored from lead signals (AI scoring off)';
+
+        return array_slice($reasons, 0, 4);
     }
 
     /** @return array{action:string, rationale:string} */

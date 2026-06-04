@@ -60,9 +60,11 @@ it('degrades gracefully when AI is disabled for the workspace', function () {
     $tenant->update(['ai_enabled' => false]);
     $lead = Lead::factory()->create();
 
-    // Real service, no HTTP: returns the safe fallback instead of throwing.
+    // Real service, no HTTP: falls back to a transparent signal-based score
+    // (never throws, never a flat default).
     $result = app(GeminiService::class)->scoreLead($lead);
 
-    expect($result['score'])->toBe(0)
-        ->and($result['reasons'])->toBeArray();
+    expect($result['score'])->toBeGreaterThan(0)
+        ->and($result['score'])->toBeLessThanOrEqual(100)
+        ->and($result['reasons'])->toBeArray()->not->toBeEmpty();
 });
