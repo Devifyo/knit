@@ -78,7 +78,7 @@ class ContactPageController extends Controller
             'company' => [
                 'name' => 'Knit',
                 'legalName' => 'Knit by Devifyo',
-                'email' => 'support@devifyo.cloud',
+                'email' => 'thagyal11@gmail.com',
                 'website' => 'https://knit.devifyo.cloud',
                 'hours' => 'Monday – Friday, 9:00 AM – 6:00 PM (IST)',
             ],
