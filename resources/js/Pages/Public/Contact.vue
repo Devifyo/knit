@@ -7,6 +7,7 @@ const props = defineProps({ company: Object, consentText: String });
 
 const page = usePage();
 const success = computed(() => page.props.flash?.success);
+const year = new Date().getFullYear();
 
 const form = useForm({
     name: '',
@@ -19,206 +20,211 @@ const form = useForm({
 const submit = () => form.post('/contact', { preserveScroll: true });
 
 const steps = [
-    { n: '01', title: 'Submit your inquiry', body: 'Tell us about your project using the form above. It takes about a minute.' },
-    { n: '02', title: 'Receive a consultation', body: 'We schedule a call to understand your goals, scope and timeline.' },
-    { n: '03', title: 'Get a project proposal', body: 'You receive a clear proposal with scope, milestones and pricing.' },
-    { n: '04', title: 'Start development', body: 'We kick off, with regular updates and transparent communication.' },
+    { n: '01', title: 'Submit your inquiry', body: 'Tell us about your project. It takes about a minute.' },
+    { n: '02', title: 'Receive a consultation', body: 'We get on a call to understand goals, scope and timeline.' },
+    { n: '03', title: 'Get a project proposal', body: 'A clear plan with scope, milestones and pricing.' },
+    { n: '04', title: 'Start development', body: 'We build — with regular updates and honest communication.' },
 ];
 
 const services = [
-    { title: 'Custom Web Applications', body: 'Tailored web apps built around your exact business processes.', icon: 'M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7zM3 9h18' },
-    { title: 'SaaS Development', body: 'Multi-tenant, subscription-ready products designed to scale.', icon: 'M12 3l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5' },
-    { title: 'Laravel Development', body: 'Robust, maintainable backends and APIs on modern Laravel.', icon: 'M4 6h16M4 12h16M4 18h16' },
-    { title: 'AI Automation', body: 'Automate workflows, support and insights with practical AI.', icon: 'M12 2a7 7 0 00-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 00-7-7zM9 21h6' },
-    { title: 'API Development', body: 'Secure, well-documented APIs and third-party integrations.', icon: 'M8 9l-3 3 3 3M16 9l3 3-3 3M13 5l-2 14' },
-    { title: 'CRM & Business Systems', body: 'Internal tools and CRMs that fit how your team actually works.', icon: 'M16 11a4 4 0 10-8 0 4 4 0 008 0zM4 21v-1a6 6 0 0112 0v1' },
+    { title: 'Custom Web Applications', body: 'Applications built around your exact processes — not a template.' },
+    { title: 'SaaS Development', body: 'Multi-tenant, subscription-ready products designed to scale.' },
+    { title: 'Laravel Development', body: 'Maintainable backends and APIs on modern Laravel.' },
+    { title: 'AI Automation', body: 'Automate workflows, support and insight with practical AI.' },
+    { title: 'API Development', body: 'Secure, documented APIs and third-party integrations.' },
+    { title: 'CRM & Business Systems', body: 'Internal tools and CRMs that fit how your team works.' },
 ];
+
+const field = 'w-full rounded-md border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)] transition placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-4 focus:ring-stone-900/5';
 </script>
 
 <template>
     <Head title="Contact Knit — Request a Consultation" />
 
-    <div class="min-h-screen bg-white text-slate-900 antialiased">
+    <div class="min-h-screen bg-[#faf9f7] font-sans text-stone-900 antialiased selection:bg-stone-900 selection:text-white">
         <!-- Nav -->
-        <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur">
-            <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-                <a href="/contact" class="flex items-center gap-2">
-                    <span class="grid size-8 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">K</span>
-                    <span class="text-lg font-semibold tracking-tight">{{ company.name }}</span>
+        <header class="border-b border-stone-200/80">
+            <div class="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-5 sm:px-8">
+                <a href="/contact" class="flex items-baseline gap-2.5">
+                    <span class="serif text-2xl font-semibold leading-none">Knit</span>
+                    <span class="hidden text-[11px] uppercase tracking-[0.2em] text-stone-400 sm:inline">{{ company.legalName }}</span>
                 </a>
-                <nav class="hidden items-center gap-7 text-sm font-medium text-slate-600 sm:flex">
-                    <a href="#services" class="hover:text-slate-900">Services</a>
-                    <a href="#how" class="hover:text-slate-900">How it works</a>
-                    <a href="#contact" class="hover:text-slate-900">Contact</a>
+                <nav class="hidden items-center gap-8 text-sm text-stone-500 md:flex">
+                    <a href="#services" class="transition hover:text-stone-900">Services</a>
+                    <a href="#how" class="transition hover:text-stone-900">Process</a>
+                    <a href="#contact" class="transition hover:text-stone-900">Contact</a>
                 </nav>
-                <a href="#form" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">Request a Consultation</a>
+                <a href="#form" class="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700">Request a consultation</a>
             </div>
         </header>
 
-        <!-- Hero -->
-        <section class="relative overflow-hidden">
-            <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-indigo-50 to-white" />
-            <div class="relative mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-                <div class="mx-auto max-w-3xl text-center">
-                    <span class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">Software development &amp; AI automation</span>
-                    <h1 class="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Let's Build Your Next Software Project</h1>
-                    <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
-                        {{ company.name }} designs and builds custom web applications, SaaS platforms, and AI automation.
-                        From Laravel development and API integrations to business workflow automation, we turn your
-                        requirements into reliable, scalable software.
+        <!-- Hero + form (asymmetric, form above the fold) -->
+        <section class="relative">
+            <div class="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.05)_1px,transparent_0)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" />
+            <div class="relative mx-auto grid max-w-6xl gap-14 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
+                <!-- Copy -->
+                <div class="max-w-xl lg:pt-6">
+                    <p class="eyebrow text-[12px] text-stone-500">Software development &amp; AI automation</p>
+                    <h1 class="serif mt-5 text-[2.7rem] font-medium leading-[1.04] tracking-[-0.02em] text-stone-900 sm:text-6xl">
+                        Let's build your next<br class="hidden sm:block" /> software project.
+                    </h1>
+                    <p class="mt-6 text-lg leading-relaxed text-stone-600">
+                        We design and build custom web applications, SaaS platforms and AI automation — from
+                        Laravel development and API integrations to business workflow automation. You bring the
+                        problem; we ship reliable, scalable software.
                     </p>
-                    <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                        <a href="#form" class="w-full rounded-lg bg-indigo-600 px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:bg-indigo-700 sm:w-auto">Request a Consultation</a>
-                        <a href="#services" class="w-full rounded-lg border border-slate-300 bg-white px-6 py-3 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto">Explore services</a>
+                    <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <a href="#form" class="rounded-md bg-stone-900 px-6 py-3 text-base font-medium text-white transition hover:bg-stone-700">Request a consultation</a>
+                        <a href="#services" class="text-base font-medium text-stone-900 underline decoration-stone-300 decoration-1 underline-offset-[5px] transition hover:decoration-stone-900">See what we build</a>
                     </div>
-                    <p class="mt-4 text-sm text-slate-500">No obligation. We typically respond within one business day.</p>
+                    <div class="mt-10 flex flex-wrap items-center gap-x-7 gap-y-2 border-t border-stone-200 pt-6 text-sm text-stone-500">
+                        <span>Senior engineers</span>
+                        <span class="hidden sm:inline text-stone-300">·</span>
+                        <span>Fixed-scope proposals</span>
+                        <span class="hidden sm:inline text-stone-300">·</span>
+                        <span>Reply within one business day</span>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <div id="form" class="scroll-mt-24">
+                    <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_40px_-12px_rgba(0,0,0,0.12)] sm:p-8">
+                        <template v-if="success">
+                            <div class="py-10 text-center">
+                                <div class="mx-auto grid size-12 place-items-center rounded-full bg-stone-900 text-white">
+                                    <svg viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                </div>
+                                <h3 class="serif mt-5 text-2xl font-medium">Request received</h3>
+                                <p class="mx-auto mt-2 max-w-xs text-stone-600">{{ success }}</p>
+                            </div>
+                        </template>
+
+                        <template v-else>
+                            <p class="eyebrow text-[11px] text-stone-400">Consultation request</p>
+                            <h2 class="serif mt-2 text-2xl font-medium">Tell us about your project</h2>
+
+                            <form class="mt-6 space-y-4" @submit.prevent="submit">
+                                <div>
+                                    <label class="mb-1.5 block text-[13px] font-medium text-stone-700">Full name <span class="text-stone-400">*</span></label>
+                                    <input v-model="form.name" type="text" autocomplete="name" :class="field" />
+                                    <p v-if="form.errors.name" class="mt-1 text-xs text-red-600">{{ form.errors.name }}</p>
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-[13px] font-medium text-stone-700">Company name</label>
+                                    <input v-model="form.company" type="text" autocomplete="organization" :class="field" />
+                                </div>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label class="mb-1.5 block text-[13px] font-medium text-stone-700">Email <span class="text-stone-400">*</span></label>
+                                        <input v-model="form.email" type="email" autocomplete="email" :class="field" />
+                                        <p v-if="form.errors.email" class="mt-1 text-xs text-red-600">{{ form.errors.email }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="mb-1.5 block text-[13px] font-medium text-stone-700">Phone <span class="text-stone-400">*</span></label>
+                                        <input v-model="form.phone" type="tel" autocomplete="tel" placeholder="+1 555 123 4567" :class="field" />
+                                        <p v-if="form.errors.phone" class="mt-1 text-xs text-red-600">{{ form.errors.phone }}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-[13px] font-medium text-stone-700">Project requirements</label>
+                                    <textarea v-model="form.requirements" rows="4" placeholder="What are you looking to build?" :class="field"></textarea>
+                                </div>
+
+                                <!-- SMS consent — unchecked by default, required -->
+                                <label class="flex gap-3 rounded-lg bg-stone-50 p-3.5 ring-1 ring-inset ring-stone-200">
+                                    <input v-model="form.sms_consent" type="checkbox" class="mt-0.5 size-4 shrink-0 rounded border-stone-400 text-stone-900 focus:ring-stone-900" />
+                                    <span class="text-[12px] leading-relaxed text-stone-600">{{ consentText }}</span>
+                                </label>
+                                <p v-if="form.errors.sms_consent" class="-mt-1 text-xs font-medium text-red-600">{{ form.errors.sms_consent }}</p>
+
+                                <button type="submit" :disabled="form.processing" class="w-full rounded-md bg-stone-900 px-6 py-3 text-base font-medium text-white transition hover:bg-stone-700 disabled:opacity-60">
+                                    {{ form.processing ? 'Submitting…' : 'Request a consultation' }}
+                                </button>
+                                <p class="text-center text-[12px] text-stone-400">
+                                    By submitting you agree to our
+                                    <Link href="/privacy" class="text-stone-600 underline decoration-stone-300 underline-offset-2 hover:text-stone-900">Privacy Policy</Link>
+                                    and
+                                    <Link href="/terms" class="text-stone-600 underline decoration-stone-300 underline-offset-2 hover:text-stone-900">Terms</Link>.
+                                </p>
+                            </form>
+                        </template>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Form -->
-        <section id="form" class="scroll-mt-20 bg-slate-50 py-16 sm:py-20">
-            <div class="mx-auto grid max-w-6xl gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
-                <div>
-                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">Request a consultation</h2>
-                    <p class="mt-3 text-slate-600">Share a few details about your project and we'll get back to you to plan the next steps.</p>
-                    <ul class="mt-6 space-y-3 text-sm text-slate-600">
-                        <li v-for="t in ['Free, no-obligation consultation', 'Clear proposal with scope &amp; pricing', 'Direct line to senior engineers']" :key="t" class="flex items-start gap-2.5">
-                            <svg viewBox="0 0 24 24" fill="none" class="mt-0.5 size-5 shrink-0 text-indigo-600" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                            <span v-html="t" />
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <!-- Success state -->
-                    <div v-if="success" class="py-8 text-center">
-                        <div class="mx-auto grid size-12 place-items-center rounded-full bg-green-100 text-green-600">
-                            <svg viewBox="0 0 24 24" fill="none" class="size-7" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        </div>
-                        <h3 class="mt-4 text-lg font-semibold">Request received</h3>
-                        <p class="mt-1 text-slate-600">{{ success }}</p>
-                    </div>
-
-                    <form v-else class="space-y-4" @submit.prevent="submit">
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">Full name <span class="text-red-500">*</span></label>
-                            <input v-model="form.name" type="text" autocomplete="name" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                            <p v-if="form.errors.name" class="mt-1 text-xs text-red-600">{{ form.errors.name }}</p>
-                        </div>
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">Company name</label>
-                            <input v-model="form.company" type="text" autocomplete="organization" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">Email address <span class="text-red-500">*</span></label>
-                                <input v-model="form.email" type="email" autocomplete="email" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                                <p v-if="form.errors.email" class="mt-1 text-xs text-red-600">{{ form.errors.email }}</p>
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700">Phone number <span class="text-red-500">*</span></label>
-                                <input v-model="form.phone" type="tel" autocomplete="tel" placeholder="+1 555 123 4567" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
-                                <p v-if="form.errors.phone" class="mt-1 text-xs text-red-600">{{ form.errors.phone }}</p>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700">Project requirements</label>
-                            <textarea v-model="form.requirements" rows="4" placeholder="Tell us what you're looking to build…" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></textarea>
-                        </div>
-
-                        <!-- SMS consent — unchecked by default, required -->
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                            <label class="flex gap-3">
-                                <input v-model="form.sms_consent" type="checkbox" class="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                                <span class="text-xs leading-relaxed text-slate-600">{{ consentText }}</span>
-                            </label>
-                            <p v-if="form.errors.sms_consent" class="mt-2 text-xs font-medium text-red-600">{{ form.errors.sms_consent }}</p>
-                        </div>
-
-                        <button type="submit" :disabled="form.processing" class="w-full rounded-lg bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60">
-                            {{ form.processing ? 'Submitting…' : 'Request a Consultation' }}
-                        </button>
-                        <p class="text-center text-xs text-slate-500">
-                            By submitting, you agree to our
-                            <Link href="/privacy" class="text-indigo-600 hover:underline">Privacy Policy</Link> and
-                            <Link href="/terms" class="text-indigo-600 hover:underline">Terms &amp; Conditions</Link>.
-                        </p>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- How it works -->
-        <section id="how" class="scroll-mt-20 py-16 sm:py-20">
-            <div class="mx-auto max-w-6xl px-5 sm:px-8">
-                <div class="mx-auto max-w-2xl text-center">
-                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">How it works</h2>
-                    <p class="mt-3 text-slate-600">A simple, transparent path from idea to working software.</p>
-                </div>
-                <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <div v-for="s in steps" :key="s.n" class="rounded-2xl border border-slate-200 bg-white p-6">
-                        <span class="text-sm font-bold text-indigo-600">{{ s.n }}</span>
-                        <h3 class="mt-2 text-base font-semibold">{{ s.title }}</h3>
-                        <p class="mt-1.5 text-sm leading-relaxed text-slate-600">{{ s.body }}</p>
+        <!-- Process -->
+        <section id="how" class="scroll-mt-20 border-t border-stone-200 bg-white">
+            <div class="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+                <p class="eyebrow text-[12px] text-stone-400">How it works</p>
+                <h2 class="serif mt-3 max-w-xl text-3xl font-medium tracking-[-0.01em] sm:text-4xl">A clear path from idea to shipped software.</h2>
+                <div class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-4">
+                    <div v-for="s in steps" :key="s.n" class="bg-white p-7">
+                        <span class="serif text-3xl font-medium text-stone-300">{{ s.n }}</span>
+                        <h3 class="mt-3 text-base font-semibold text-stone-900">{{ s.title }}</h3>
+                        <p class="mt-1.5 text-sm leading-relaxed text-stone-500">{{ s.body }}</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Services -->
-        <section id="services" class="scroll-mt-20 bg-slate-50 py-16 sm:py-20">
-            <div class="mx-auto max-w-6xl px-5 sm:px-8">
-                <div class="mx-auto max-w-2xl text-center">
-                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">What we build</h2>
-                    <p class="mt-3 text-slate-600">End-to-end software and automation, delivered by a senior team.</p>
-                </div>
-                <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    <div v-for="svc in services" :key="svc.title" class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:shadow-md">
-                        <div class="grid size-11 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
-                            <svg viewBox="0 0 24 24" fill="none" class="size-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path :d="svc.icon" /></svg>
-                        </div>
-                        <h3 class="mt-4 text-base font-semibold">{{ svc.title }}</h3>
-                        <p class="mt-1.5 text-sm leading-relaxed text-slate-600">{{ svc.body }}</p>
+        <section id="services" class="scroll-mt-20 border-t border-stone-200">
+            <div class="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+                <p class="eyebrow text-[12px] text-stone-400">Capabilities</p>
+                <h2 class="serif mt-3 max-w-xl text-3xl font-medium tracking-[-0.01em] sm:text-4xl">What we build.</h2>
+                <div class="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-for="(svc, i) in services" :key="svc.title" class="border-t border-stone-900/10 pt-5">
+                        <span class="eyebrow text-[11px] text-stone-400">{{ String(i + 1).padStart(2, '0') }}</span>
+                        <h3 class="serif mt-2 text-xl font-medium text-stone-900">{{ svc.title }}</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-stone-500">{{ svc.body }}</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Contact information -->
-        <section id="contact" class="scroll-mt-20 py-16 sm:py-20">
-            <div class="mx-auto max-w-6xl px-5 sm:px-8">
-                <div class="mx-auto max-w-2xl text-center">
-                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">Get in touch</h2>
-                    <p class="mt-3 text-slate-600">Prefer email? Reach us directly — we're happy to help.</p>
-                </div>
-                <div class="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
-                    <div class="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Support email</p>
-                        <a :href="`mailto:${company.email}`" class="mt-2 block break-words font-medium text-indigo-600 hover:underline">{{ company.email }}</a>
+        <!-- Contact info -->
+        <section id="contact" class="scroll-mt-20 border-t border-stone-200 bg-stone-900 text-stone-100">
+            <div class="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+                <div class="grid gap-12 lg:grid-cols-[1fr_auto]">
+                    <div class="max-w-md">
+                        <p class="eyebrow text-[12px] text-stone-500">Get in touch</p>
+                        <h2 class="serif mt-3 text-3xl font-medium tracking-[-0.01em] sm:text-4xl">Prefer email? We're happy to help.</h2>
+                        <a href="#form" class="mt-7 inline-block rounded-md bg-white px-6 py-3 text-base font-medium text-stone-900 transition hover:bg-stone-200">Start a request</a>
                     </div>
-                    <div class="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Website</p>
-                        <a :href="company.website" class="mt-2 block break-words font-medium text-indigo-600 hover:underline">{{ company.website }}</a>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Business hours</p>
-                        <p class="mt-2 font-medium text-slate-700">{{ company.hours }}</p>
-                    </div>
+                    <dl class="grid grid-cols-1 gap-8 sm:grid-cols-3 lg:gap-12">
+                        <div>
+                            <dt class="eyebrow text-[11px] text-stone-500">Support email</dt>
+                            <dd class="mt-2"><a :href="`mailto:${company.email}`" class="break-words text-stone-100 underline decoration-stone-600 underline-offset-4 hover:decoration-stone-100">{{ company.email }}</a></dd>
+                        </div>
+                        <div>
+                            <dt class="eyebrow text-[11px] text-stone-500">Website</dt>
+                            <dd class="mt-2"><a :href="company.website" class="break-words text-stone-100 underline decoration-stone-600 underline-offset-4 hover:decoration-stone-100">{{ company.website }}</a></dd>
+                        </div>
+                        <div>
+                            <dt class="eyebrow text-[11px] text-stone-500">Business hours</dt>
+                            <dd class="mt-2 text-stone-300">{{ company.hours }}</dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
         </section>
 
         <!-- Footer -->
-        <footer class="border-t border-slate-200 bg-white">
-            <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 sm:flex-row sm:px-8">
-                <p class="text-sm text-slate-500">© {{ new Date().getFullYear() }} {{ company.legalName }}. All rights reserved.</p>
-                <nav class="flex items-center gap-6 text-sm font-medium text-slate-600">
-                    <Link href="/privacy" class="hover:text-slate-900">Privacy Policy</Link>
-                    <Link href="/terms" class="hover:text-slate-900">Terms &amp; Conditions</Link>
-                    <a href="#form" class="hover:text-slate-900">Contact Us</a>
+        <footer class="bg-stone-900 text-stone-400">
+            <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 border-t border-white/10 px-5 py-8 sm:flex-row sm:px-8">
+                <p class="text-sm">© {{ year }} {{ company.legalName }}. All rights reserved.</p>
+                <nav class="flex items-center gap-7 text-sm">
+                    <Link href="/privacy" class="hover:text-white">Privacy Policy</Link>
+                    <Link href="/terms" class="hover:text-white">Terms &amp; Conditions</Link>
+                    <a href="#form" class="hover:text-white">Contact Us</a>
                 </nav>
             </div>
         </footer>
     </div>
 </template>
+
+<style scoped>
+.serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; font-optical-sizing: auto; }
+.eyebrow { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, monospace; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 500; }
+</style>
