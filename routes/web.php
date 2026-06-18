@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ContactPageController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\SearchController;
@@ -55,6 +56,12 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
+
+// Public marketing site — lead-gen / consultation page + SMS-compliance pages.
+Route::get('/contact', [ContactPageController::class, 'contact'])->name('contact');
+Route::post('/contact', [ContactPageController::class, 'submit'])->name('contact.submit');
+Route::get('/privacy', [ContactPageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [ContactPageController::class, 'terms'])->name('terms');
 
 // Public, per-workspace lead capture form (no auth). Feeds the automation engine.
 Route::get('/f/{slug}', [LeadCaptureController::class, 'show'])->name('lead-capture.show');
